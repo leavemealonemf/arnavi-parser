@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -12,13 +11,20 @@ func handleServe(conn net.Conn) {
 
 	// isFirstConn := true
 
+	buff := make([]byte, 1024)
+
 	for {
-		msg, err := bufio.NewReader(conn).ReadString('\n')
+		_, err := conn.Read(buff)
 		if err != nil {
 			fmt.Println("Received data err:", err.Error())
 			break
 		}
-		fmt.Println("Received msg:", msg)
+		fmt.Println("Received msg:", string(buff))
+		// msg, err := bufio.NewReader(conn).ReadString('\n')
+		// if err != nil {
+		// 	fmt.Println("Received data err:", err.Error())
+		// 	break
+		// }
 
 		// if isFirstConn {
 		// 	conn.Write([]byte("SERVER_COM"))
