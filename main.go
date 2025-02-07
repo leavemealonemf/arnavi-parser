@@ -30,7 +30,7 @@ func handleServe(conn net.Conn) {
 		// }
 
 		if isFirstConn {
-			data, err := hex.DecodeString("7B05C701020304057D")
+			data, err := hex.DecodeString("7B0400CA5E9F6F5E7D")
 
 			if err != nil {
 				panic(err)
