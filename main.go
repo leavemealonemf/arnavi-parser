@@ -10,7 +10,7 @@ import (
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
-	isFirstConn := true
+	// isFirstConn := true
 
 	for {
 		msg, err := bufio.NewReader(conn).ReadString('\n')
@@ -20,10 +20,10 @@ func handleServe(conn net.Conn) {
 		}
 		fmt.Println("Received msg:", msg)
 
-		if isFirstConn {
-			conn.Write([]byte("SERVER_COM"))
-			isFirstConn = false
-		}
+		// if isFirstConn {
+		// 	conn.Write([]byte("SERVER_COM"))
+		// 	isFirstConn = false
+		// }
 	}
 }
 
