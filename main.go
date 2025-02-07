@@ -30,7 +30,7 @@ func handleServe(conn net.Conn) {
 		// }
 
 		if isFirstConn {
-			conn.Write([]byte("92.53.104.29"))
+			conn.Write([]byte("92.53.104.29:20550"))
 			isFirstConn = false
 		}
 	}
