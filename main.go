@@ -10,7 +10,7 @@ import (
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
-	// isFirstConn := true
+	isFirstConn := true
 
 	buff := make([]byte, 1024)
 
@@ -29,10 +29,10 @@ func handleServe(conn net.Conn) {
 		// 	break
 		// }
 
-		// if isFirstConn {
-		// 	conn.Write([]byte("SERVER_COM"))
-		// 	isFirstConn = false
-		// }
+		if isFirstConn {
+			conn.Write([]byte("SERVER_COM"))
+			isFirstConn = false
+		}
 	}
 }
 
