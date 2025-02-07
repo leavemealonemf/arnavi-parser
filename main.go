@@ -30,7 +30,13 @@ func handleServe(conn net.Conn) {
 		// }
 
 		if isFirstConn {
-			conn.Write([]byte("7B05C701020304057D"))
+			data, err := hex.DecodeString("7B05C701020304057D")
+
+			if err != nil {
+				panic(err)
+			}
+
+			conn.Write(data)
 			fmt.Println("sending server com...")
 			isFirstConn = false
 		}
