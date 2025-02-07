@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"log"
 	"net"
@@ -19,7 +20,9 @@ func handleServe(conn net.Conn) {
 			fmt.Println("Received data err:", err.Error())
 			break
 		}
-		fmt.Println("Received msg:", buff)
+		encodedString := hex.EncodeToString(buff)
+		fmt.Println("Received msg:", encodedString)
+
 		// msg, err := bufio.NewReader(conn).ReadString('\n')
 		// if err != nil {
 		// 	fmt.Println("Received data err:", err.Error())
