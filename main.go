@@ -186,12 +186,20 @@ func handleServe(conn net.Conn) {
 			var start int64 = 4
 
 			for {
+				hexPacket := &HEXPacket{
+					TypeOfContent: hexPackageData[start : start+2],
+				}
+
 				start += 2 // skip type
+				hexPacket.PacketDataLen = hexPackageData[start : start+2]
 				dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
 				start += 4 // skip len
+				hexPacket.Unixtime = hexPackageData[start : start+8]
 				start += 8 // skip ts
 				packets = append(packets, hexPackageData[start:start+dataLenBytes])
+				hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
 				checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
+				hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
 				if checksum == "5d" {
 					start = 0
@@ -200,16 +208,16 @@ func handleServe(conn net.Conn) {
 				}
 
 				start += dataLenBytes + 2
-				fmt.Println(dataLenBytes)
+				fmt.Println("TAGS DATA", hexPacket.TagsData)
 			}
 
 			sComPackage, _ := hex.DecodeString("7B0001FE7D")
 			conn.Write(sComPackage)
 			fmt.Println("sending package SERVER_COM back...")
 
-			for i := 0; i < len(packets); i++ {
-				fmt.Println("Packet num", i+1, ":", packets[i])
-			}
+			// for i := 0; i < len(packets); i++ {
+			// 	fmt.Println("Packet num", i+1, ":", packets[i])
+			// }
 		}
 	}
 }
