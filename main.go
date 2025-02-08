@@ -51,9 +51,6 @@ func HexToBytes(hexString string) []byte {
 func parseIMEI(hexIMEI string) int64 {
 	bytes, _ := hex.DecodeString(hexIMEI)
 
-	// e5 45 06 e9 a1 13 03 00
-	// [0 3 19 161 233 6 69 229]
-
 	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
 		bytes[i], bytes[j] = bytes[j], bytes[i]
 	}
@@ -199,8 +196,6 @@ func main() {
 
 // header
 // ff23e54506e9a11303000000000000000000000000000000000000000000000
-
-// 6f5e970f270000c8049b461662049bb208c90000
 
 // PACKAGE
 
