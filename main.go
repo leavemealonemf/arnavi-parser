@@ -166,6 +166,7 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 			fmt.Println("DATA LENGTH:", HexToBytes(hexPackageData[6:8]))
+			fmt.Println("TAGS DATA:", HexToBytes(hexPackageData[16:30]))
 		}
 	}
 }
