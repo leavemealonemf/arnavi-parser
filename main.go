@@ -20,18 +20,18 @@ type HEXHeader struct {
 }
 
 type HEXPackage struct {
-	StartSign uint8
-	ParcelNum uint8
+	StartSign string
+	ParcelNum string
 	Packet    *HEXPacket
-	EndSign   uint8
+	EndSign   string
 }
 
 type HEXPacket struct {
-	TypeOfContent uint8
-	PacketDataLen uint16
-	Unixtime      uint64
-	TagsData      uint64
-	Checksum      uint8
+	TypeOfContent string
+	PacketDataLen string
+	Unixtime      string
+	TagsData      string
+	Checksum      string
 }
 
 type Device struct {
@@ -63,6 +63,10 @@ func parseIMEI(hexIMEI string) int64 {
 	decIMEI, _ := strconv.ParseInt(reversedIMEI, 16, 64)
 	return decIMEI
 }
+
+// func parsePackage(packageHex string) {
+
+// }
 
 func handleServe(conn net.Conn) {
 	defer conn.Close()
@@ -145,6 +149,23 @@ func handleServe(conn net.Conn) {
 			conn.Write(data)
 			fmt.Println("sending server com...")
 			isFirstConn = false
+		} else {
+			if strings.ToLower(hexPackageData[0:2]) != "5b" {
+				fmt.Println("Wrong package sign. Break...")
+				break
+			}
+
+			// hexPackage := &HEXPackage{
+			// 	StartSign: hexPackageData[0:2],
+			// 	ParcelNum: hexPackageData[2:4],
+			// }
+
+			// hexPacket := &HEXPacket{
+			// 	TypeOfContent: hexPackageData[4:6],
+			// 	PacketDataLen: hexPackageData[6:8],
+			// 	Unixtime:      hexPackageData[8:16],
+			// }
+			fmt.Println("DATA LENGTH:", HexToBytes(hexPackageData[6:8]))
 		}
 	}
 }
@@ -154,8 +175,7 @@ func main() {
 
 	devices = make([]*Device, 0)
 	testDevices = make([]int64, 0)
-	// testDevices = append(testDevices, 866011050296805)
-	testDevices = append(testDevices, 856011050296805)
+	testDevices = append(testDevices, 866011050296805)
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())
