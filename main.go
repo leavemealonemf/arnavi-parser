@@ -177,6 +177,7 @@ func handleServe(conn net.Conn) {
 			// 	PacketDataLen: hexPackageData[6:8],
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
+			fmt.Println("origin len:", hexPackageData[6:8])
 			fmt.Println("reversed len:", reverseBytes(hexPackageData[6:8]))
 
 			dataLenBytes := hexToDec(BytesToHexString(reverseBytes(hexPackageData[6:8])))
