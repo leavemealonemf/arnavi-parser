@@ -183,7 +183,7 @@ func handleServe(conn net.Conn) {
 			var packets []string
 			var start int64 = 4
 
-			fmt.Println("FULL PACKET", hexPackageData)
+			fmt.Printf("FULL PACKET: %v\n\n", hexPackageData)
 
 			fmt.Println("----- PACKETS ------")
 
