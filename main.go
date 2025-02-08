@@ -69,7 +69,7 @@ func handleServe(conn net.Conn) {
 
 	isFirstConn := true
 
-	buff := make([]byte, 0)
+	buff := make([]byte, 1024)
 
 	for {
 		_, err := conn.Read(buff)
@@ -95,29 +95,23 @@ func handleServe(conn net.Conn) {
 				IMEI:        hexPackageData[4:20],
 			}
 
-			headerLength := len(HexToBytes(hexPackageData))
+			// headerHex := HexToBytes(hexPackageData)
+			// var headerBytes []byte
 
 			if strings.ToLower(header.ProtocolVer) == "22" {
 				// header 1 case
 				// 10 bytes header len
-				if headerLength != 10 {
-					fmt.Println("Wrong header size:", headerLength)
-					break
-				}
+				// headerBytes = headerHex[0:10]
+
 			} else if strings.ToLower(header.ProtocolVer) == "23" || strings.ToLower(header.ProtocolVer) == "25" {
 				// header 2 case
 				// 10 bytes header len
-				if headerLength != 10 {
-					fmt.Println("Wrong header size:", headerLength)
-					break
-				}
+				// headerBytes = headerHex[0:10]
+
 			} else if strings.ToLower(header.ProtocolVer) == "24" {
 				// header 3 case
 				// 18 bytes header len
-				if headerLength != 18 {
-					fmt.Println("Wrong header size:", headerLength)
-					break
-				}
+				// headerBytes = headerHex[0:18]
 			}
 
 			decIMEI := parseIMEI(header.IMEI)
