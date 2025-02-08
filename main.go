@@ -154,8 +154,8 @@ func main() {
 
 	devices = make([]*Device, 0)
 	testDevices = make([]int64, 0)
-	testDevices = append(testDevices, 866011050296805)
-	// testDevices = append(testDevices, 856011050296805)
+	// testDevices = append(testDevices, 866011050296805)
+	testDevices = append(testDevices, 856011050296805)
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())
