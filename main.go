@@ -190,18 +190,17 @@ func handleServe(conn net.Conn) {
 				dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
 				start += 4 // skip len
 				start += 8 // skip ts
-				// packets = append(packets, hexPackageData[start:dataLenBytes])
-				// checksum := hexPackageData[start : dataLenBytes+2]
+				packets = append(packets, hexPackageData[start:start+dataLenBytes])
+				checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
-				// if checksum == "5d" {
-				// 	start = 0
-				// 	fmt.Println("Packeges store complete!")
-				// 	break
-				// }
+				if checksum == "5d" {
+					start = 0
+					fmt.Println("Packeges store complete!")
+					break
+				}
 
 				start += dataLenBytes + 2
 				fmt.Println(dataLenBytes)
-
 			}
 
 			sComPackage, _ := hex.DecodeString("7B0001FE7D")
