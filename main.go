@@ -97,10 +97,6 @@ func handleServe(conn net.Conn) {
 		hexPackageData := BytesToHexString(buff)
 		fmt.Println("Received msg:", hexPackageData)
 
-		sComPackage, err := hex.DecodeString("7B0001FE7D")
-		conn.Write(sComPackage)
-		fmt.Println("sending package SERVER_COM back...")
-
 		if isFirstConn {
 			// check data is header
 
@@ -190,6 +186,9 @@ func handleServe(conn net.Conn) {
 
 			fmt.Println("DATA LENGTH:", dataLenBytes)
 			// fmt.Println("TAGS DATA:", hexPackageData[16:502])
+			sComPackage, _ := hex.DecodeString("7B0001FE7D")
+			conn.Write(sComPackage)
+			fmt.Println("sending package SERVER_COM back...")
 		}
 	}
 }
