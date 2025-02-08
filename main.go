@@ -179,11 +179,11 @@ func handleServe(conn net.Conn) {
 			// 	PacketDataLen: hexPackageData[6:8],
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
-			fmt.Println("origin len:", hexPackageData[6:8])
-			fmt.Println("reversed len:", reverseBytes(hexPackageData[6:8]))
 
 			var packets []string
 			var start int64 = 4
+
+			fmt.Println("FULL PACKET", hexPackageData)
 
 			for {
 				hexPacket := &HEXPacket{
@@ -208,18 +208,18 @@ func handleServe(conn net.Conn) {
 				}
 
 				start += dataLenBytes + 2
-				fmt.Println("TAGS DATA", hexPacket.TagsData)
+				fmt.Println("----- PACKETS ------")
+				printHexPacketStructData(hexPacket)
 			}
 
 			sComPackage, _ := hex.DecodeString("7B0001FE7D")
 			conn.Write(sComPackage)
-			fmt.Println("sending package SERVER_COM back...")
-
-			// for i := 0; i < len(packets); i++ {
-			// 	fmt.Println("Packet num", i+1, ":", packets[i])
-			// }
 		}
 	}
+}
+
+func printHexPacketStructData(packet *HEXPacket) {
+	fmt.Printf("type of content: %v\ndata len: %v\npacket unixtime: %v\npacket tags data: %v\nchecksum: %v\n", packet.TypeOfContent, packet.PacketDataLen, packet.Unixtime, packet.TagsData, packet.Checksum)
 }
 
 func main() {
