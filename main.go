@@ -184,23 +184,22 @@ func handleServe(conn net.Conn) {
 
 			var packets []string
 			var start int64 = 4
-			var prevLen int64 = 0
 
 			for {
-				start += 2
+				start += 2 // skip type
 				dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
-				prevLen += dataLenBytes
-				start += 4
-				start += 8
-				packets = append(packets, hexPackageData[start:prevLen])
-				start += dataLenBytes + 2
-				checksum := hexPackageData[prevLen : prevLen+2]
+				start += 4 // skip len
+				start += 8 // skip ts
+				packets = append(packets, hexPackageData[start:dataLenBytes])
+				checksum := hexPackageData[start : dataLenBytes+2]
 
 				if checksum == "5d" {
 					start = 0
 					fmt.Println("Packeges store complete!")
 					break
 				}
+
+				start += dataLenBytes + 2
 
 			}
 
