@@ -5,7 +5,64 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"strconv"
+	"strings"
 )
+
+var testDevices []int64
+var devices []*Device
+
+type HEXHeader struct {
+	HeaderID    string
+	ProtocolVer string
+	IMEI        string
+	WifiID      string
+}
+
+type HEXPackage struct {
+	StartSign uint8
+	ParcelNum uint8
+	Packet    *HEXPacket
+	EndSign   uint8
+}
+
+type HEXPacket struct {
+	TypeOfContent uint8
+	PacketDataLen uint16
+	Unixtime      uint64
+	TagsData      uint64
+	Checksum      uint8
+}
+
+type Device struct {
+	IMEI int64
+}
+
+func BytesToHexString(bytes []byte) string {
+	encoded := hex.EncodeToString(bytes)
+	return encoded
+}
+
+func HexToBytes(hexString string) []byte {
+	bytes, _ := hex.DecodeString(hexString)
+	return bytes
+}
+
+func parseIMEI(hexIMEI string) int64 {
+	bytes, _ := hex.DecodeString(hexIMEI)
+
+	// e5 45 06 e9 a1 13 03 00
+	// [0 3 19 161 233 6 69 229]
+
+	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
+		bytes[i], bytes[j] = bytes[j], bytes[i]
+	}
+
+	reversedIMEI := BytesToHexString(bytes)
+
+	decIMEI, _ := strconv.ParseInt(reversedIMEI, 16, 64)
+	return decIMEI
+}
 
 func handleServe(conn net.Conn) {
 	defer conn.Close()
@@ -20,16 +77,71 @@ func handleServe(conn net.Conn) {
 			fmt.Println("Received data err:", err.Error())
 			break
 		}
-		encodedString := hex.EncodeToString(buff)
-		fmt.Println("Received msg:", encodedString)
 
-		// msg, err := bufio.NewReader(conn).ReadString('\n')
-		// if err != nil {
-		// 	fmt.Println("Received data err:", err.Error())
-		// 	break
-		// }
+		hexPackageData := BytesToHexString(buff)
+		fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
+			// check data is header
+
+			if strings.ToLower(hexPackageData[0:2]) != "ff" {
+				fmt.Println("Not a header. Break")
+				break
+			}
+
+			header := &HEXHeader{
+				HeaderID:    hexPackageData[0:2],
+				ProtocolVer: hexPackageData[2:4],
+				IMEI:        hexPackageData[4:20],
+			}
+
+			headerLength := len(HexToBytes(hexPackageData))
+
+			if strings.ToLower(header.ProtocolVer) == "22" {
+				// header 1 case
+				// 10 bytes header len
+				if headerLength != 10 {
+					fmt.Println("Wrong header size:", headerLength)
+					break
+				}
+			} else if strings.ToLower(header.ProtocolVer) == "23" || strings.ToLower(header.ProtocolVer) == "25" {
+				// header 2 case
+				// 10 bytes header len
+				if headerLength != 10 {
+					fmt.Println("Wrong header size:", headerLength)
+					break
+				}
+			} else if strings.ToLower(header.ProtocolVer) == "24" {
+				// header 3 case
+				// 18 bytes header len
+				if headerLength != 18 {
+					fmt.Println("Wrong header size:", headerLength)
+					break
+				}
+			}
+
+			decIMEI := parseIMEI(header.IMEI)
+
+			// VALIDATE IMEI IN DATABASE
+			for i := 0; i < len(testDevices); i++ {
+				if decIMEI == testDevices[i] {
+					fmt.Println("Find imei. Continue...")
+					break
+				} else {
+					fmt.Println("Find imei error. Break...")
+					conn.Close()
+					break
+				}
+			}
+			// END VALIDATE IMEI IN DATABASE
+
+			device := &Device{
+				IMEI: decIMEI,
+			}
+
+			devices = append(devices, device)
+
+			// send SERVER_COM
 			data, err := hex.DecodeString("7B0400CA5E9F6F5E7D")
 
 			if err != nil {
@@ -45,6 +157,11 @@ func handleServe(conn net.Conn) {
 
 func main() {
 	serve, err := net.Listen("tcp", ":20550")
+
+	devices = make([]*Device, 0)
+	testDevices = make([]int64, 0)
+	testDevices = append(testDevices, 866011050296805)
+	// testDevices = append(testDevices, 856011050296805)
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())
@@ -64,6 +181,9 @@ func main() {
 		go handleServe(conn)
 	}
 }
+
+// header
+// ff23e54506e9a11303000000000000000000000000000000000000000000000
 
 // 6f5e970f270000c8049b461662049bb208c90000
 
@@ -96,11 +216,15 @@ func main() {
 // 6332820002
 // fa32010000
 
-// PACKET
+// END TAG DATA
 
 // f5 - checksum
 
+// END PACKET DATA
+
 // 5d
+
+// END PACKAGE
 
 // 5b
 // 01
