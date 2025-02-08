@@ -185,6 +185,8 @@ func handleServe(conn net.Conn) {
 
 			fmt.Println("FULL PACKET", hexPackageData)
 
+			fmt.Println("----- PACKETS ------")
+
 			for {
 				hexPacket := &HEXPacket{
 					TypeOfContent: hexPackageData[start : start+2],
@@ -208,7 +210,6 @@ func handleServe(conn net.Conn) {
 				}
 
 				start += dataLenBytes + 2
-				fmt.Println("----- PACKETS ------")
 				printHexPacketStructData(hexPacket)
 			}
 
