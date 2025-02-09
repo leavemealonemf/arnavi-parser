@@ -35,7 +35,20 @@ type HEXPacket struct {
 }
 
 type Device struct {
-	IMEI int64
+	ServerTime uint64  `json:'_ts'`
+	Timestamp  uint64  `json:'time'`
+	Online     bool    `json:'online'`
+	Charge     uint8   `json:'charge'`
+	Alt        uint16  `json:'altitude'`
+	Azimut     uint16  `json:'azimut'`
+	Lat        float32 `json:'lat'`
+	Lon        float32 `json:'lon'`
+	SatGps     uint8   `json:'sat_gps'`
+	SatGlonass uint8   `json:'sat_glonass'`
+	// Код сотовой сети
+	Mnc   uint32 `json:'mnc'`
+	Level uint32 `json:'level'`
+	IMEI  int64  `json:'imei'`
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -90,8 +103,8 @@ func PacketHexChecksum(hexPacket *HEXPacket) string {
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
 	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
-	// sComPackage, _ := hex.DecodeString("7B00017D")
-	sComPackage, _ := hex.DecodeString("7B02FE0201017D")
+	sComPackage, _ := hex.DecodeString("7B00017D")
+	// sComPackage, _ := hex.DecodeString("7B02010201017D")
 	// sComPackage, _ := hex.DecodeString("7B02010201017D")
 	conn.Write(sComPackage)
 }
@@ -116,6 +129,7 @@ func handleServe(conn net.Conn) {
 			break
 		}
 
+		var device Device
 		hexPackageData := BytesToHexString(buff)
 		// fmt.Println("Received msg:", hexPackageData)
 
@@ -167,11 +181,9 @@ func handleServe(conn net.Conn) {
 			}
 			// END VALIDATE IMEI IN DATABASE
 
-			device := &Device{
-				IMEI: decIMEI,
-			}
+			device.IMEI = decIMEI
 
-			devices = append(devices, device)
+			devices = append(devices, &device)
 
 			// send SERVER_COM
 			// 7B0400CA5E9F6F5E7D
