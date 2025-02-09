@@ -371,7 +371,7 @@ func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 				fmt.Println(connections[i].device.IMEI)
 				fmt.Println(imei)
 			}
-			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
+			if connections[i].device != nil && strconv.FormatInt(int64(connections[i].device.IMEI), 10) == imei {
 				fmt.Println("send")
 				sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
 				connections[i].conn.Write(sComPackage)
