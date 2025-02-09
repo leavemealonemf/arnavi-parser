@@ -119,8 +119,8 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 
 func sendTestCMD(conn net.Conn) {
 	fmt.Printf("Send COMMAND...\n")
-	sComPackage, _ := hex.DecodeString("7B03FF333300007D")
-	// sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+	// sComPackage, _ := hex.DecodeString("7B03FF333300007D")
+	sComPackage, _ := hex.DecodeString("7B03FF343300017D")
 	// 7B03FF343300017D
 	conn.Write(sComPackage)
 }
@@ -229,6 +229,7 @@ func handleServe(conn net.Conn) {
 			if !isCmdSended {
 				sendTestCMD(conn)
 				isCmdSended = true
+				continue
 			}
 
 			var start int64 = 4
