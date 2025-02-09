@@ -14,6 +14,12 @@ import (
 
 var testDevices []int64
 var devices []*Device
+var connections []*Connection
+
+type Connection struct {
+	conn   net.Conn
+	device *Device
+}
 
 type HEXHeader struct {
 	HeaderID    string
@@ -136,6 +142,15 @@ func handleServe(conn net.Conn) {
 
 	buff := make([]byte, 5000)
 
+	var device Device
+
+	connection := &Connection{
+		conn:   conn,
+		device: &device,
+	}
+
+	connections = append(connections, connection)
+
 	for {
 		_, err := conn.Read(buff)
 		if err != nil {
@@ -143,7 +158,6 @@ func handleServe(conn net.Conn) {
 			break
 		}
 
-		var device Device
 		hexPackageData := BytesToHexString(buff)
 		fmt.Println("Received msg:", hexPackageData)
 
@@ -347,6 +361,7 @@ func main() {
 	devices = make([]*Device, 0)
 	testDevices = make([]int64, 0)
 	testDevices = append(testDevices, 866011050296805)
+	connections = make([]*Connection, 0)
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())
