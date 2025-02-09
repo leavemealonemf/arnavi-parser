@@ -92,6 +92,18 @@ func PacketHexChecksum(hexPacket *HEXPacket) string {
 	return fmt.Sprintf("%02x", checksum)
 }
 
+func sendServerComSuccessed(codeLine string, conn net.Conn) {
+	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
+	sComPackage, _ := hex.DecodeString("7B00017D")
+	conn.Write(sComPackage)
+}
+
+func sendServerComFailed(codeLine string, conn net.Conn) {
+	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM failed...\n", codeLine)
+	sComPackage, _ := hex.DecodeString("7B00FE7D")
+	conn.Write(sComPackage)
+}
+
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
@@ -192,7 +204,6 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			var packets []string
 			var start int64 = 4
 
 			fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
@@ -211,33 +222,31 @@ func handleServe(conn net.Conn) {
 					start += 4 // skip len
 					hexPacket.Unixtime = hexPackageData[start : start+8]
 					start += 8 // skip ts
-					packets = append(packets, hexPackageData[start:start+dataLenBytes])
 					hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
 					// checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
 					packetChecksum := PacketHexChecksum(hexPacket)
 					fmt.Println("packet checksum:", packetChecksum)
+
+					if strings.ToLower(packetChecksum) != hexPacket.Checksum {
+						fmt.Println("Wrong packet checksum. Break...")
+						sendServerComFailed("234", conn)
+						break
+					}
+
 					start += dataLenBytes + 2
 
 					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
-						defer func() {
-							fmt.Println("[LINE 227] Get package. Sending SERVER_COM...")
-							sComPackage, _ := hex.DecodeString("7B00017D")
-							conn.Write(sComPackage)
-						}()
+						defer sendServerComSuccessed("243", conn)
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
 
 				} else {
-					defer func() {
-						fmt.Println("[LINE 237] Get package. Sending SERVER_COM...")
-						sComPackage, _ := hex.DecodeString("7B00FE7D")
-						conn.Write(sComPackage)
-					}()
+					sendServerComFailed("249", conn)
 					break
 				}
 			}
