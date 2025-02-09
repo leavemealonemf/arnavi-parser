@@ -234,13 +234,17 @@ func handleServe(conn net.Conn) {
 
 					start += dataLenBytes + 2
 
+					fmt.Println("")
+
 					for i := 0; i < len(hexPacket.TagsData); i = i + 10 {
 						if i+10 > len(hexPacket.TagsData) {
 							fmt.Println("out of range tags parse")
 							break
 						}
-						tagIDDec := hexToDec(string(hexPacket.TagsData[i+2]))
-						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, hexPacket.TagsData[i:i+10], hexPacket.TagsData[i+2:i+10])
+						tagIDDec := hexToDec(string(hexPacket.TagsData[i+i+2]))
+						tagFull := hexPacket.TagsData[i : i+10]
+						tagParam := hexPacket.TagsData[i+2 : i+10]
+						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
 						fmt.Println("--------------------")
 					}
 
