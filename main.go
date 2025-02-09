@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/gorilla/mux"
 )
 
 var testDevices []int64
@@ -317,23 +319,26 @@ func printHexPacketStructData(packet *HEXPacket) {
 
 func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		imei := r.URL.Query().Get("imei")
+		vars := mux.Vars(r)
+		imei := vars["imei"]
 		fmt.Fprintf(w, "success %v", imei)
 	}
 }
 
 func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
-		imei := r.URL.Query().Get("imei")
+		vars := mux.Vars(r)
+		imei := vars["imei"]
 		fmt.Fprintf(w, "success %v", imei)
 	}
 }
 
 func bootHTTP() {
-	http.HandleFunc("/on/:imei", HTTPCmdHandlerOn)
-	http.HandleFunc("/off/:imei", HTTPCmdHandlerOff)
-	fmt.Println("HTTP on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	r := mux.NewRouter()
+	r.HandleFunc("/on/{imei}", HTTPCmdHandlerOn)
+	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOn)
+	http.Handle("/", r)
+	http.ListenAndServe(":8080", nil)
 }
 
 func main() {
