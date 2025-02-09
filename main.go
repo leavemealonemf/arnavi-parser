@@ -232,6 +232,8 @@ func handleServe(conn net.Conn) {
 						break
 					}
 
+					start += dataLenBytes + 2
+
 					for i := 0; i < len(hexPacket.TagsData); i = i + 10 {
 						fmt.Println("pack len", len(hexPacket.TagsData))
 						fmt.Println("i", i)
@@ -241,8 +243,6 @@ func handleServe(conn net.Conn) {
 						}
 						fmt.Printf("param %v / hex_tag: %v\n", i+1, hexPacket.TagsData[i:i+10])
 					}
-
-					start += dataLenBytes + 2
 
 					printHexPacketStructData(hexPacket)
 
