@@ -368,6 +368,8 @@ func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("device nil?", connections[i].device == nil)
 			if connections[i].device != nil {
 				fmt.Println("is imei's equals?", string(connections[i].device.IMEI) == imei)
+				fmt.Println(string(connections[i].device.IMEI))
+				fmt.Println(imei)
 			}
 			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
 				fmt.Println("send")
