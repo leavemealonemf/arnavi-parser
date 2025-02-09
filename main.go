@@ -57,9 +57,10 @@ type Device struct {
 	SatGps     uint8   `json:'sat_gps'`
 	SatGlonass uint8   `json:'sat_glonass'`
 	// Код сотовой сети
-	Mnc   uint32 `json:'mnc'`
-	Level uint32 `json:'level'`
-	IMEI  int64  `json:'imei'`
+	Mnc          uint32 `json:'mnc'`
+	Level        uint32 `json:'level'`
+	IMEI         int64  `json:'imei'`
+	DeviceStatus map[string]int
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -304,7 +305,7 @@ func handleServe(conn net.Conn) {
 							num, _ := strconv.ParseInt(tagParam, 16, 64)
 
 							devicePreResult := map[int]int{}
-							deviceResult := map[string]int{}
+							device.DeviceStatus = map[string]int{}
 
 							for i := 0; i < len(deviceStatusBitPos); i++ {
 								var result int64
@@ -317,10 +318,10 @@ func handleServe(conn net.Conn) {
 
 							for i := 0; i < len(devicePreResult); i++ {
 								assotiation := deviceIdsBytesAssotiation[i]
-								deviceResult[assotiation] = devicePreResult[i]
+								device.DeviceStatus[assotiation] = devicePreResult[i]
 							}
 
-							fmt.Println("tag_99 info:", deviceResult)
+							fmt.Println("tag_99 info:", device.DeviceStatus)
 							break
 						case 6:
 							break
