@@ -80,6 +80,18 @@ func hexToDec(hexString string) int64 {
 
 // }
 
+func PacketHexChecksum(hexPacket *HEXPacket) string {
+	var packetData string = hexPacket.Unixtime + hexPacket.TagsData + hexPacket.Checksum
+	revBytes := reverseBytes(packetData)
+
+	checksum := byte(0)
+	for _, b := range revBytes {
+		checksum += b
+	}
+
+	return fmt.Sprintf("%02x", checksum)
+}
+
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
@@ -205,12 +217,24 @@ func handleServe(conn net.Conn) {
 
 				if checksum == "5d" {
 					start = 0
-					fmt.Println("Packeges store complete!")
+					fmt.Println("Packages store complete!")
 					break
 				} else {
-					if hexToDec(checksum) != (hexToDec(hexPacket.PacketDataLen) - 3) {
+					packetChecksum := PacketHexChecksum(hexPacket)
+					fmt.Println(hexPacket)
+					if strings.ToLower(packetChecksum) != checksum {
 						fmt.Println("data len and checksum not equal. skiping packet...")
 						continue
+					} else {
+						tags := hexPacket.TagsData
+						// grab tag by tag logic here
+						for i := 0; i < len(tags); i = i + 10 {
+							if (i + 10) > len(tags) {
+								fmt.Println("tags data ended")
+								break
+							}
+							fmt.Println(tags[i : i+10])
+						}
 					}
 				}
 
@@ -218,7 +242,7 @@ func handleServe(conn net.Conn) {
 				printHexPacketStructData(hexPacket)
 			}
 
-			sComPackage, _ := hex.DecodeString("7B0001FE7D")
+			sComPackage, _ := hex.DecodeString("7B00FB7D")
 			conn.Write(sComPackage)
 		}
 	}
