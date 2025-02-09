@@ -106,7 +106,7 @@ func sendServerComSuccessed(codeLine string, conn net.Conn) {
 	// sComPackage, _ := hex.DecodeString("7B00017D")
 	// sComPackage, _ := hex.DecodeString("7B02010201017D")
 	// sComPackage, _ := hex.DecodeString("7B02010201017D")
-	sComPackage, _ := hex.DecodeString("7B060114DDCCBBAA01017D")
+	sComPackage, _ := hex.DecodeString("7B060102DDCCBBAA01017D")
 
 	conn.Write(sComPackage)
 }
