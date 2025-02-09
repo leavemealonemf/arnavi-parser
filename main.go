@@ -388,8 +388,16 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 		imei := vars["imei"]
 
 		for i := 0; i < len(connections); i++ {
-			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
-				sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+			fmt.Println("send command handler")
+			fmt.Println("device nil?", connections[i].device == nil)
+			if connections[i].device != nil {
+				fmt.Println("is imei's equals?", string(connections[i].device.IMEI) == imei)
+				fmt.Println(connections[i].device.IMEI)
+				fmt.Println(imei)
+			}
+			if connections[i].device != nil && strconv.FormatInt(int64(connections[i].device.IMEI), 10) == imei {
+				fmt.Println("send")
+				sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
 				connections[i].conn.Write(sComPackage)
 			}
 		}
