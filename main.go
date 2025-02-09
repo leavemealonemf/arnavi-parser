@@ -117,6 +117,12 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 	conn.Write(sComPackage)
 }
 
+func sendTestCMD(conn net.Conn) {
+	fmt.Printf("Send COMMAND...\n")
+	sComPackage, _ := hex.DecodeString("7b08ff59ff314e55513300007d")
+	conn.Write(sComPackage)
+}
+
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
@@ -216,6 +222,8 @@ func handleServe(conn net.Conn) {
 			// 	PacketDataLen: hexPackageData[6:8],
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
+
+			sendTestCMD(conn)
 
 			var start int64 = 4
 
