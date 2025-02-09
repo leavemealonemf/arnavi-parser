@@ -293,16 +293,22 @@ func handleServe(conn net.Conn) {
 						tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
-						// switch tagIDDec {
-						// case 190:
-						// 	break
-						// case 99:
-						// 	break
-						// case 6:
-						// 	break
-						// default:
-						// 	break
-						// }
+						switch tagIDDec {
+						case 190:
+							break
+						case 99:
+							reversed := BytesToHexString(reverseBytes(tagParam))
+							num, _ := strconv.ParseInt(reversed, 16, 64)
+							for i := 31; i >= 0; i-- {
+								bit := (num >> i) & 1
+								fmt.Printf("Бит %2d: %d\n", i, bit)
+							}
+							break
+						case 6:
+							break
+						default:
+							break
+						}
 
 						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
 						fmt.Println("--------------------")
