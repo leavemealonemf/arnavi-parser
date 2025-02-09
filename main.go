@@ -130,7 +130,8 @@ func sendTestCMD(conn net.Conn) {
 	fmt.Printf("Send COMMAND...\n")
 	// sComPackage, _ := hex.DecodeString("7B03FF333300007D")
 	// sComPackage, _ := hex.DecodeString("7B03FF343300017D")
-	sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
+	// sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
+	sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
 	// 7B08FF57FF314e55513300007D
 	// 7B03FF343300017D
 	conn.Write(sComPackage)
@@ -140,7 +141,7 @@ func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
-	// isCmdSended := false
+	isCmdSended := false
 
 	buff := make([]byte, 5000)
 
@@ -245,11 +246,11 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			// if !isCmdSended {
-			// 	sendTestCMD(conn)
-			// 	isCmdSended = true
-			// 	continue
-			// }
+			if !isCmdSended {
+				sendTestCMD(conn)
+				isCmdSended = true
+				continue
+			}
 
 			var start int64 = 4
 
@@ -297,12 +298,12 @@ func handleServe(conn net.Conn) {
 						case 190:
 							break
 						case 99:
-							reversed := BytesToHexString(reverseBytes(tagParam))
-							num, _ := strconv.ParseInt(reversed, 16, 64)
-							for i := 31; i >= 0; i-- {
-								bit := (num >> i) & 1
-								fmt.Printf("Бит %2d: %d\n", i, bit)
-							}
+							// reversed := BytesToHexString(reverseBytes(tagParam))
+							// num, _ := strconv.ParseInt(reversed, 16, 64)
+							// for i := 31; i >= 0; i-- {
+							// 	bit := (num >> i) & 1
+							// 	fmt.Printf("Бит %2d: %d\n", i, bit)
+							// }
 							break
 						case 6:
 							break
