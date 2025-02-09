@@ -77,13 +77,13 @@ func main() {
 	num := int(0x0e000232)
 	deviceStatusBitPos := [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
 
-	// ids_bytes_assotiation := map[int]string{
-	// 	0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "S3_st", 6: "S2_st", 7: "S1_st", 8: "S0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
-	// }
+	deviceIdsBytesAssotiation := map[int]string{
+		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "S3_st", 6: "S2_st", 7: "S1_st", 8: "S0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
+	}
 
-	device_pre_result := map[int]int{}
+	devicePreResult := map[int]int{}
 
-	device_result := map[int]int{}
+	deviceResult := map[string]int{}
 
 	for i := 0; i < len(deviceStatusBitPos); i++ {
 		var result int
@@ -91,14 +91,17 @@ func main() {
 			bit := (num >> deviceStatusBitPos[i][j]) & 1
 			result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
 		}
-		device_pre_result[i] = result
+		devicePreResult[i] = result
 	}
 
-	// for i := 0; i < count; i++ {
+	for i := 0; i < len(devicePreResult); i++ {
+		assotiation := ids_bytes_assotiation[i]
+		fmt.Println(assotiation)
+		deviceResult[assotiation] = devicePreResult[i]
+	}
 
-	// }
-
-	fmt.Printf("device_result: %v\n", device_result)
+	// fmt.Printf("device_pre_result: %v\n", devicePreResult)
+	fmt.Printf("device_result: %v\n", deviceResult)
 
 	// for i := 31; i >= 0; i-- {
 	// 	bit := (num >> i) & 1

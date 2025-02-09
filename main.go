@@ -15,6 +15,8 @@ import (
 var testDevices []int64
 var devices []*Device
 var connections []*Connection
+var deviceStatusBitPos [][]int
+var deviceIdsBytesAssotiation map[int]string
 
 type Connection struct {
 	conn   net.Conn
@@ -142,7 +144,7 @@ func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
-	isCmdSended := false
+	// isCmdSended := false
 
 	buff := make([]byte, 5000)
 
@@ -247,11 +249,11 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			if !isCmdSended {
-				sendTestCMD(conn)
-				isCmdSended = true
-				continue
-			}
+			// if !isCmdSended {
+			// 	sendTestCMD(conn)
+			// 	isCmdSended = true
+			// 	continue
+			// }
 
 			var start int64 = 4
 
@@ -299,12 +301,26 @@ func handleServe(conn net.Conn) {
 						case 190:
 							break
 						case 99:
-							// reversed := BytesToHexString(reverseBytes(tagParam))
-							// num, _ := strconv.ParseInt(reversed, 16, 64)
-							// for i := 31; i >= 0; i-- {
-							// 	bit := (num >> i) & 1
-							// 	fmt.Printf("Бит %2d: %d\n", i, bit)
-							// }
+							num, _ := strconv.ParseInt(tagParam, 16, 64)
+
+							devicePreResult := map[int]int{}
+							deviceResult := map[string]int{}
+
+							for i := 0; i < len(deviceStatusBitPos); i++ {
+								var result int64
+								for j := 0; j < len(deviceStatusBitPos[i]); j++ {
+									bit := (num >> deviceStatusBitPos[i][j]) & 1
+									result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
+								}
+								devicePreResult[i] = int(result)
+							}
+
+							for i := 0; i < len(devicePreResult); i++ {
+								assotiation := deviceIdsBytesAssotiation[i]
+								deviceResult[assotiation] = devicePreResult[i]
+							}
+
+							fmt.Println("tag_99 info:", deviceResult)
 							break
 						case 6:
 							break
@@ -388,6 +404,10 @@ func main() {
 	testDevices = make([]int64, 0)
 	testDevices = append(testDevices, 866011050296805)
 	connections = make([]*Connection, 0)
+	deviceStatusBitPos = [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
+	deviceIdsBytesAssotiation = map[int]string{
+		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "S3_st", 6: "S2_st", 7: "S1_st", 8: "S0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
+	}
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())
