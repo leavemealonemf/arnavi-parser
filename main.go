@@ -127,6 +127,7 @@ func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
+	isCmdSended := false
 
 	buff := make([]byte, 5000)
 
@@ -223,7 +224,10 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			sendTestCMD(conn)
+			if !isCmdSended {
+				sendTestCMD(conn)
+				isCmdSended = true
+			}
 
 			var start int64 = 4
 
