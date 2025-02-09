@@ -119,7 +119,7 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 
 func sendTestCMD(conn net.Conn) {
 	fmt.Printf("Send COMMAND...\n")
-	sComPackage, _ := hex.DecodeString("7b08ff59ff314e55513300007d")
+	sComPackage, _ := hex.DecodeString("7B03FF333300007D")
 	conn.Write(sComPackage)
 }
 
@@ -223,7 +223,7 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			// sendTestCMD(conn)
+			sendTestCMD(conn)
 
 			var start int64 = 4
 
@@ -266,6 +266,18 @@ func handleServe(conn net.Conn) {
 						tagIDDec := hexToDec(string(hexPacket.TagsData[i : i+2]))
 						tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
+
+						// switch tagIDDec {
+						// case 190:
+						// 	break
+						// case 99:
+						// 	break
+						// case 6:
+						// 	break
+						// default:
+						// 	break
+						// }
+
 						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
 						fmt.Println("--------------------")
 					}
