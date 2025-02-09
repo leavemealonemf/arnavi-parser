@@ -232,7 +232,7 @@ func handleServe(conn net.Conn) {
 						break
 					}
 
-					for i := 0; i <= len(hexPacket.TagsData); i = +10 {
+					for i := 0; i > len(hexPacket.TagsData); i = +10 {
 						if i+10 > len(hexPacket.TagsData) {
 							fmt.Println("out of range tags parse")
 							break
