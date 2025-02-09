@@ -218,30 +218,13 @@ func handleServe(conn net.Conn) {
 
 					packetChecksum := PacketHexChecksum(hexPacket)
 					fmt.Println("packet checksum:", packetChecksum)
-
-					if hexPackageData[start+dataLenBytes+2:start+2+dataLenBytes+2] == "5d" {
-						start = 0
-						fmt.Println("Packages store complete!")
-						break
-					} else {
-						packetChecksum := PacketHexChecksum(hexPacket)
-						fmt.Println(packetChecksum)
-						// if strings.ToLower(packetChecksum) != checksum {
-						// 	fmt.Println("data len and checksum not equal. skiping packet...")
-						// 	continue
-						// } else {
-						// 	tags := hexPacket.TagsData
-						// 	// grab tag by tag logic here
-						// 	for i := 0; i < len(tags); i = i + 10 {
-						// 		if (i + 10) > len(tags) {
-						// 			fmt.Println("tags data ended")
-						// 			break
-						// 		}
-						// 		fmt.Println(tags[i : i+10])
-						// 	}
-						// }
-					}
 					start += dataLenBytes + 2
+
+					if hexPackageData[start:start+2] == "5d" {
+						fmt.Println("Packet's parsed successfully")
+						break
+					}
+
 					printHexPacketStructData(hexPacket)
 				} else {
 					conn.Close()
