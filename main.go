@@ -233,7 +233,11 @@ func handleServe(conn net.Conn) {
 					}
 
 				} else {
-					conn.Close()
+					defer func() {
+						fmt.Println("[LINE 237] Get package. Sending SERVER_COM...")
+						sComPackage, _ := hex.DecodeString("7B00FE7D")
+						conn.Write(sComPackage)
+					}()
 					break
 				}
 			}
