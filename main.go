@@ -330,8 +330,8 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 }
 
 func bootHTTP() {
-	http.HandleFunc("/:imei/on", HTTPCmdHandlerOn)
-	http.HandleFunc("/:imei/off", HTTPCmdHandlerOff)
+	http.HandleFunc("/on/:imei", HTTPCmdHandlerOn)
+	http.HandleFunc("/off/:imei", HTTPCmdHandlerOff)
 	fmt.Println("HTTP on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
