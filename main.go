@@ -212,10 +212,10 @@ func handleServe(conn net.Conn) {
 				start += 8 // skip ts
 				packets = append(packets, hexPackageData[start:start+dataLenBytes])
 				hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
-				checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
+				// checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 				hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
-				if checksum == "5d" {
+				if hexPackageData[start+dataLenBytes+2:start+2+dataLenBytes+2] == "5d" {
 					start = 0
 					fmt.Println("Packages store complete!")
 					break
