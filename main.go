@@ -207,6 +207,11 @@ func handleServe(conn net.Conn) {
 					start = 0
 					fmt.Println("Packeges store complete!")
 					break
+				} else {
+					if hexToDec(checksum) != (hexToDec(hexPacket.PacketDataLen) - 3) {
+						fmt.Println("data len and checksum not equal. skiping packet...")
+						continue
+					}
 				}
 
 				start += dataLenBytes + 2
