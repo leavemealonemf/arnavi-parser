@@ -129,7 +129,9 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 func sendTestCMD(conn net.Conn) {
 	fmt.Printf("Send COMMAND...\n")
 	// sComPackage, _ := hex.DecodeString("7B03FF333300007D")
-	sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+	// sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+	sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
+	// 7B08FF57FF314e55513300007D
 	// 7B03FF343300017D
 	conn.Write(sComPackage)
 }
