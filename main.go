@@ -223,6 +223,11 @@ func handleServe(conn net.Conn) {
 					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
+						defer func() {
+							fmt.Println("Get package. Sending SERVER_COM...")
+							sComPackage, _ := hex.DecodeString("7B00017D")
+							conn.Write(sComPackage)
+						}()
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
@@ -233,7 +238,8 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
-			sComPackage, _ := hex.DecodeString("7B00FB7D")
+			fmt.Println("Get package. Sending SERVER_COM...")
+			sComPackage, _ := hex.DecodeString("7B00017D")
 			conn.Write(sComPackage)
 		}
 	}
