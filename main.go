@@ -81,7 +81,7 @@ func hexToDec(hexString string) int64 {
 // }
 
 func PacketHexChecksum(hexPacket *HEXPacket) string {
-	var packetData string = hexPacket.Unixtime + hexPacket.TagsData + hexPacket.Checksum
+	var packetData string = hexPacket.Unixtime + hexPacket.TagsData
 	revBytes := reverseBytes(packetData)
 
 	checksum := byte(0)
@@ -195,7 +195,7 @@ func handleServe(conn net.Conn) {
 			var packets []string
 			var start int64 = 4
 
-			fmt.Printf("FULL PACKET: %v\n\n", hexPackageData)
+			fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
 
 			fmt.Println("----- PACKETS ------")
 
@@ -204,42 +204,49 @@ func handleServe(conn net.Conn) {
 					TypeOfContent: hexPackageData[start : start+2],
 				}
 
-				start += 2 // skip type
-				hexPacket.PacketDataLen = hexPackageData[start : start+2]
-				dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
-				start += 4 // skip len
-				hexPacket.Unixtime = hexPackageData[start : start+8]
-				start += 8 // skip ts
-				packets = append(packets, hexPackageData[start:start+dataLenBytes])
-				hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
-				// checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
-				hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
+				if strings.ToLower(hexPacket.TypeOfContent) == "01" {
+					start += 2 // skip type
+					hexPacket.PacketDataLen = hexPackageData[start : start+2]
+					dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
+					start += 4 // skip len
+					hexPacket.Unixtime = hexPackageData[start : start+8]
+					start += 8 // skip ts
+					packets = append(packets, hexPackageData[start:start+dataLenBytes])
+					hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
+					// checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
+					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
-				if hexPackageData[start+dataLenBytes+2:start+2+dataLenBytes+2] == "5d" {
-					start = 0
-					fmt.Println("Packages store complete!")
-					break
-				} else {
 					packetChecksum := PacketHexChecksum(hexPacket)
-					fmt.Println(packetChecksum)
-					// if strings.ToLower(packetChecksum) != checksum {
-					// 	fmt.Println("data len and checksum not equal. skiping packet...")
-					// 	continue
-					// } else {
-					// 	tags := hexPacket.TagsData
-					// 	// grab tag by tag logic here
-					// 	for i := 0; i < len(tags); i = i + 10 {
-					// 		if (i + 10) > len(tags) {
-					// 			fmt.Println("tags data ended")
-					// 			break
-					// 		}
-					// 		fmt.Println(tags[i : i+10])
-					// 	}
-					// }
-				}
+					fmt.Println("packet checksum:", packetChecksum)
 
-				start += dataLenBytes + 2
-				printHexPacketStructData(hexPacket)
+					if hexPackageData[start+dataLenBytes+2:start+2+dataLenBytes+2] == "5d" {
+						start = 0
+						fmt.Println("Packages store complete!")
+						break
+					} else {
+						packetChecksum := PacketHexChecksum(hexPacket)
+						fmt.Println(packetChecksum)
+						// if strings.ToLower(packetChecksum) != checksum {
+						// 	fmt.Println("data len and checksum not equal. skiping packet...")
+						// 	continue
+						// } else {
+						// 	tags := hexPacket.TagsData
+						// 	// grab tag by tag logic here
+						// 	for i := 0; i < len(tags); i = i + 10 {
+						// 		if (i + 10) > len(tags) {
+						// 			fmt.Println("tags data ended")
+						// 			break
+						// 		}
+						// 		fmt.Println(tags[i : i+10])
+						// 	}
+						// }
+					}
+					start += dataLenBytes + 2
+					printHexPacketStructData(hexPacket)
+				} else {
+					conn.Close()
+					break
+				}
 			}
 
 			sComPackage, _ := hex.DecodeString("7B00FB7D")
