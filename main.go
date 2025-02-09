@@ -220,12 +220,13 @@ func handleServe(conn net.Conn) {
 					fmt.Println("packet checksum:", packetChecksum)
 					start += dataLenBytes + 2
 
+					printHexPacketStructData(hexPacket)
+
 					if hexPackageData[start:start+2] == "5d" {
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
 
-					printHexPacketStructData(hexPacket)
 				} else {
 					conn.Close()
 					break
