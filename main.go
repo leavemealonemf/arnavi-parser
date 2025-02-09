@@ -76,10 +76,6 @@ func hexToDec(hexString string) int64 {
 	return dec
 }
 
-// func parsePackage(packageHex string) {
-
-// }
-
 func PacketHexChecksum(hexPacket *HEXPacket) string {
 	var packetData string = hexPacket.Unixtime + hexPacket.TagsData
 	revBytes := reverseBytes(packetData)
@@ -231,7 +227,7 @@ func handleServe(conn net.Conn) {
 
 					if strings.ToLower(packetChecksum) != hexPacket.Checksum {
 						fmt.Println("Wrong packet checksum. Break...")
-						sendServerComFailed("234", conn)
+						sendServerComFailed("230", conn)
 						break
 					}
 
@@ -240,13 +236,13 @@ func handleServe(conn net.Conn) {
 					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
-						defer sendServerComSuccessed("243", conn)
+						defer sendServerComSuccessed("239", conn)
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
 
 				} else {
-					sendServerComFailed("249", conn)
+					sendServerComFailed("245", conn)
 					break
 				}
 			}
