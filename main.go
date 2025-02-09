@@ -106,7 +106,7 @@ func handleServe(conn net.Conn) {
 
 	isFirstConn := true
 
-	buff := make([]byte, 10000)
+	buff := make([]byte, 5000)
 
 	for {
 		_, err := conn.Read(buff)
@@ -116,7 +116,7 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		fmt.Println("Received msg:", hexPackageData)
+		// fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
 			// check data is header
@@ -234,15 +234,15 @@ func handleServe(conn net.Conn) {
 
 					start += dataLenBytes + 2
 
-					// for i := 0; i < len(hexPacket.TagsData); i = i + 10 {
-					// 	fmt.Println("pack len", len(hexPacket.TagsData))
-					// 	fmt.Println("i", i)
-					// 	if i+10 > len(hexPacket.TagsData) {
-					// 		fmt.Println("out of range tags parse")
-					// 		break
-					// 	}
-					// 	fmt.Printf("param %v / hex_tag: %v\n", i+1, hexPacket.TagsData[i:i+10])
-					// }
+					for i := 0; i < len(hexPacket.TagsData); i = i + 10 {
+						fmt.Println("pack len", len(hexPacket.TagsData))
+						fmt.Println("i", i)
+						if i+10 > len(hexPacket.TagsData) {
+							fmt.Println("out of range tags parse")
+							break
+						}
+						fmt.Printf("param %v / hex_tag: %v\n", i+1, hexPacket.TagsData[i:i+10])
+					}
 
 					printHexPacketStructData(hexPacket)
 
