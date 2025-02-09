@@ -365,6 +365,10 @@ func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 
 		for i := 0; i < len(connections); i++ {
 			fmt.Println("send command handler")
+			fmt.Println("device nil?", connections[i].device == nil)
+			if connections[i].device != nil {
+				fmt.Println("is imei's equals?", string(connections[i].device.IMEI) == imei)
+			}
 			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
 				fmt.Println("send")
 				sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
