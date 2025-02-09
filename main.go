@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
-	"html"
 	"log"
 	"net"
 	"net/http"
@@ -316,10 +315,23 @@ func printHexPacketStructData(packet *HEXPacket) {
 	fmt.Printf("type of content: %v\ndata len: %v\npacket unixtime: %v\npacket tags data: %v\nchecksum: %v\n\n", packet.TypeOfContent, packet.PacketDataLen, packet.Unixtime, packet.TagsData, packet.Checksum)
 }
 
+func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		imei := r.URL.Query().Get("imei")
+		fmt.Fprintf(w, "success %v", imei)
+	}
+}
+
+func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		imei := r.URL.Query().Get("imei")
+		fmt.Fprintf(w, "success %v", imei)
+	}
+}
+
 func bootHTTP() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
-	})
+	http.HandleFunc("/:imei/on", HTTPCmdHandlerOn)
+	http.HandleFunc("/:imei/off", HTTPCmdHandlerOff)
 	fmt.Println("HTTP on :8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
