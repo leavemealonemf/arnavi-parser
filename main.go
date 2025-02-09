@@ -140,7 +140,7 @@ func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
-	isCmdSended := false
+	// isCmdSended := false
 
 	buff := make([]byte, 5000)
 
@@ -245,11 +245,11 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			if !isCmdSended {
-				sendTestCMD(conn)
-				isCmdSended = true
-				continue
-			}
+			// if !isCmdSended {
+			// 	sendTestCMD(conn)
+			// 	isCmdSended = true
+			// 	continue
+			// }
 
 			var start int64 = 4
 
@@ -337,6 +337,14 @@ func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
+
+		for i := 0; i < len(connections); i++ {
+			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
+				sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
+				connections[i].conn.Write(sComPackage)
+			}
+		}
+
 		fmt.Fprintf(w, "success %v", imei)
 	}
 }
@@ -345,6 +353,14 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
+
+		for i := 0; i < len(connections); i++ {
+			if connections[i].device != nil && string(connections[i].device.IMEI) == imei {
+				sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+				connections[i].conn.Write(sComPackage)
+			}
+		}
+
 		fmt.Fprintf(w, "success %v", imei)
 	}
 }
