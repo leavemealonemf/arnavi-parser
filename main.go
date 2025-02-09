@@ -223,7 +223,7 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			sendTestCMD(conn)
+			// sendTestCMD(conn)
 
 			var start int64 = 4
 
