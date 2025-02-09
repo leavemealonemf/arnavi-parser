@@ -90,8 +90,8 @@ func PacketHexChecksum(hexPacket *HEXPacket) string {
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
 	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
-	sComPackage, _ := hex.DecodeString("7B00017D")
-	// sComPackage, _ := hex.DecodeString("7B02010201017D")
+	// sComPackage, _ := hex.DecodeString("7B00017D")
+	sComPackage, _ := hex.DecodeString("7B02010201017D")
 	conn.Write(sComPackage)
 }
 
