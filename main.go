@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"html"
 	"log"
 	"net"
+	"net/http"
 	"strconv"
 	"strings"
 )
@@ -129,7 +131,7 @@ func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
-	isCmdSended := false
+	// isCmdSended := false
 
 	buff := make([]byte, 5000)
 
@@ -226,11 +228,11 @@ func handleServe(conn net.Conn) {
 			// 	Unixtime:      hexPackageData[8:16],
 			// }
 
-			if !isCmdSended {
-				sendTestCMD(conn)
-				isCmdSended = true
-				continue
-			}
+			// if !isCmdSended {
+			// 	sendTestCMD(conn)
+			// 	isCmdSended = true
+			// 	continue
+			// }
 
 			var start int64 = 4
 
@@ -312,6 +314,14 @@ func handleServe(conn net.Conn) {
 
 func printHexPacketStructData(packet *HEXPacket) {
 	fmt.Printf("type of content: %v\ndata len: %v\npacket unixtime: %v\npacket tags data: %v\nchecksum: %v\n\n", packet.TypeOfContent, packet.PacketDataLen, packet.Unixtime, packet.TagsData, packet.Checksum)
+}
+
+func bootHTTP() {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+	})
+
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func main() {
