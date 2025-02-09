@@ -240,7 +240,7 @@ func handleServe(conn net.Conn) {
 							break
 						}
 						tagIDDec := hexToDec(string(hexPacket.TagsData[i+2]))
-						fmt.Printf("decimal tag_id: %v \nfull hex_tag: %v\n", tagIDDec, hexPacket.TagsData[i:i+10])
+						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, hexPacket.TagsData[i:i+10], hexPacket.TagsData[i+2:i+10])
 						fmt.Println("--------------------")
 					}
 
