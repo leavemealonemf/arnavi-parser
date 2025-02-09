@@ -90,8 +90,8 @@ func PacketHexChecksum(hexPacket *HEXPacket) string {
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
 	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
-	// sComPackage, _ := hex.DecodeString("7B00017D")
-	sComPackage, _ := hex.DecodeString("7B02010201017D")
+	sComPackage, _ := hex.DecodeString("7B00017D")
+	// sComPackage, _ := hex.DecodeString("7B02010201017D")
 	conn.Write(sComPackage)
 }
 
@@ -230,6 +230,14 @@ func handleServe(conn net.Conn) {
 						fmt.Println("Wrong packet checksum. Break...")
 						sendServerComFailed("230", conn)
 						break
+					}
+
+					for i := 0; i < len(hexPacket.TagsData); i = +10 {
+						if i+10 > len(hexPacket.TagsData) {
+							fmt.Println("out of range tags parse")
+							break
+						}
+						fmt.Printf("param %v / hex_tag: %v\n", i+1, hexPacket.TagsData[i:i+10])
 					}
 
 					start += dataLenBytes + 2
