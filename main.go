@@ -106,7 +106,7 @@ func handleServe(conn net.Conn) {
 
 	isFirstConn := true
 
-	buff := make([]byte, 1024)
+	buff := make([]byte, 10000)
 
 	for {
 		_, err := conn.Read(buff)
