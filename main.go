@@ -462,7 +462,7 @@ func handleServe(conn net.Conn) {
 							}
 							break
 						// device status
-						case 99:
+						case 9, 99:
 							tagParamRv := BytesToHexString(reverseBytes(tagParam))
 							num, _ := strconv.ParseInt(tagParamRv, 16, 64)
 
