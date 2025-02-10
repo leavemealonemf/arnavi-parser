@@ -399,7 +399,7 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 			}
 			if connections[i].device != nil && strconv.FormatInt(int64(connections[i].device.IMEI), 10) == imei {
 				fmt.Println("send")
-				sComPackage, _ := hex.DecodeString("7B03FF343300017D")
+				sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
 				connections[i].conn.Write(sComPackage)
 			}
 		}
