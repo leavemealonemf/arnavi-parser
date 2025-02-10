@@ -376,6 +376,7 @@ func handleServe(conn net.Conn) {
 			// }
 
 			var start int64 = 4
+			isBrokePackage := false
 
 			// fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
 			// fmt.Println("----- PACKETS ------")
@@ -404,7 +405,7 @@ func handleServe(conn net.Conn) {
 
 					if strings.ToLower(packetChecksum) != hexPacket.Checksum {
 						fmt.Println("Wrong packet checksum. Break...")
-						sendServerComFailed("230", conn)
+						isBrokePackage = true
 						break
 					}
 
@@ -508,17 +509,25 @@ func handleServe(conn net.Conn) {
 					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
-						sendServerComSuccessed("506", conn)
+						// sendServerComSuccessed("506", conn)
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
 
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
-					sendServerComSuccessed("512", conn)
+					// sendServerComSuccessed("512", conn)
 					break
 				} else {
-					sendServerComFailed("515", conn)
+					isBrokePackage = true
+					// sendServerComFailed("515", conn)
 				}
+			}
+
+			if isBrokePackage {
+				sendServerComSuccessed("527", conn)
+			} else {
+				sendServerComFailed("529", conn)
+				break
 			}
 
 			timeNow := time.Now()
