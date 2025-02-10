@@ -517,6 +517,8 @@ func handleServe(conn net.Conn) {
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
 					// sendServerComSuccessed("512", conn)
 					break
+				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
+					break
 				} else {
 					isBrokePackage = true
 					// sendServerComFailed("515", conn)
