@@ -301,8 +301,8 @@ func handleServe(conn net.Conn) {
 						switch tagIDDec {
 						case 190:
 							internalTagIDDec := hexToDec(string(hexPacket.TagsData[i+2 : i+4]))
-							internalTagParam := hexPacket.TagsData[i+4 : i+10]
-							fmt.Printf("190_tag_vs_id: %v\n190_tag_vs_param: %v\n", internalTagIDDec, internalTagParam)
+							internalTagParamRv := BytesToHexString(reverseBytes(hexPacket.TagsData[i+4 : i+10]))
+							fmt.Printf("190_tag_vs_id: %v\n190_tag_vs_param: %v\n", internalTagIDDec, internalTagParamRv)
 							break
 						case 99:
 							tagParamRv := BytesToHexString(reverseBytes(tagParam))
