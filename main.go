@@ -45,6 +45,18 @@ type HEXPacket struct {
 	Checksum      string
 }
 
+type DeviceVS struct {
+	SpeedKMH                   uint8
+	AverageCharge              uint8
+	StatementFlags             map[string][]uint8
+	MainBatteryCharge          uint8
+	AdditionalBatteryCharge    uint8
+	ErrorCode                  uint8
+	MileagePerTrip             uint32
+	MotorWheelControllerErrors uint16
+	BMSErrors                  uint8
+}
+
 type Device struct {
 	ServerTime uint64  `json:'_ts'`
 	Timestamp  uint64  `json:'time'`
@@ -57,10 +69,11 @@ type Device struct {
 	SatGps     uint8   `json:'sat_gps'`
 	SatGlonass uint8   `json:'sat_glonass'`
 	// Код сотовой сети
-	Mnc          uint32 `json:'mnc'`
-	Level        uint32 `json:'level'`
-	IMEI         int64  `json:'imei'`
-	DeviceStatus map[string]int
+	Mnc            uint32 `json:'mnc'`
+	Level          uint32 `json:'level'`
+	IMEI           int64  `json:'imei'`
+	DeviceStatus   map[string]int
+	VirtualSensors DeviceVS
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -302,6 +315,12 @@ func handleServe(conn net.Conn) {
 						case 190:
 							internalTagIDDec := hexToDec(string(hexPacket.TagsData[i+2 : i+4]))
 							internalTagParamRv := BytesToHexString(reverseBytes(hexPacket.TagsData[i+4 : i+10]))
+							switch internalTagIDDec {
+							case 61:
+								speedKmh := hexToDec(internalTagParamRv)
+								device.VirtualSensors.SpeedKMH = uint8(speedKmh)
+								fmt.Println("DEVICE CURRENT SPEED", device.VirtualSensors.SpeedKMH)
+							}
 							fmt.Printf("190_tag_vs_id: %v\n190_tag_vs_param: %v\n", internalTagIDDec, internalTagParamRv)
 							break
 						case 99:
