@@ -368,6 +368,7 @@ func handleServe(conn net.Conn) {
 								device.VirtualSensors.AverageBatteryCharge = uint8(avgBtCharge)
 								break
 							case 63:
+								fmt.Println("PARAM:", internalTagParamRv)
 								DecodeVSStatementFlags(internalTagParamRv, &device)
 								break
 							case 66:
