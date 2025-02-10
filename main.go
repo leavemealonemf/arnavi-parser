@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var testDevices []int64
@@ -51,51 +53,50 @@ type HEXPacket struct {
 }
 
 type DeviceVSStatementFlags struct {
-	MotorRunning   bool   `json:"motor_running"`
-	Mode           string `json:"mode"`
-	Charging       bool   `json:"charging"`
-	ScreenOff      bool   `json:"screen_off"`
-	PedestrianMode bool   `json:"pedestrian_mode"`
-	Overheat       bool   `json:"overheat"`
-	ScooterType    uint8  `json:"scooter_type"`
+	MotorRunning   bool   `json:"motor_running" bson:"motor_running,omitempty"`
+	Mode           string `json:"mode" bson:"mode,omitempty"`
+	Charging       bool   `json:"charging" bson:"charging,omitempty"`
+	ScreenOff      bool   `json:"screen_off" bson:"screen_off,omitempty"`
+	PedestrianMode bool   `json:"pedestrian_mode" bson:"pedestrian_mode,omitempty"`
+	Overheat       bool   `json:"overheat" bson:"overheat,omitempty"`
+	ScooterType    uint8  `json:"scooter_type" bson:"scooter_type,omitempty"`
 }
 
 type DeviceVS struct {
-	SpeedKMH                   uint8                  `json:"speed_kmh"`
-	AverageBatteryCharge       uint8                  `json:"avg_battery_charge"`
-	MainBatteryCharge          uint8                  `json:"main_battery_charge"`
-	AdditionalBatteryCharge    uint8                  `json:"additional_battery_charge"`
-	ErrorCode                  uint8                  `json:"err_code"`
-	MileagePerTrip             uint32                 `json:"mileage_per_trip"`
-	MotorWheelControllerErrors uint16                 `json:"motor_wheel_controller_errors"`
-	BMSErrors                  uint8                  `json:"bms_errors"`
-	StatementFlags             DeviceVSStatementFlags `json:"statement_flags"`
+	SpeedKMH                   uint8                  `json:"speed_kmh" bson:"speed_kmh,omitempty"`
+	AverageBatteryCharge       uint8                  `json:"avg_battery_charge" bson:"avg_battery_charge,omitempty"`
+	MainBatteryCharge          uint8                  `json:"main_battery_charge" bson:"main_battery_charge.omitempty"`
+	AdditionalBatteryCharge    uint8                  `json:"additional_battery_charge" bson:"additional_battery_charge,omitempty"`
+	ErrorCode                  uint8                  `json:"err_code" bson:"err_code,omitempty"`
+	MileagePerTrip             uint32                 `json:"mileage_per_trip" bson:"mileage_per_trip,omitempty"`
+	MotorWheelControllerErrors uint16                 `json:"motor_wheel_controller_errors" bson:"motor_wheel_controller_errors,omitempty"`
+	BMSErrors                  uint8                  `json:"bms_errors" bson:"bms_errors,omitempty"`
+	StatementFlags             DeviceVSStatementFlags `json:"statement_flags" bson:"statement_flags,omitempty"`
 }
 
 type Device struct {
-	ServerTime int64   `json:"_ts"`
-	Timestamp  int64   `json:"time"`
-	Online     bool    `json:"online"`
-	IMEI       int64   `json:"imei"`
-	Charge     uint8   `json:"charge"`       // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
-	Speed      uint8   `json:"speed"`        // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
-	Alt        uint16  `json:"altitude"`     // tag_5.altitude
-	Azimut     uint16  `json:"azimut"`       // tag_5.azimut
-	Lat        float32 `json:"lat"`          // tag_3
-	Lon        float32 `json:"lon"`          // tag_4
-	IsSim      bool    `json:"isSim"`        // tag_99 [sim_1st] && [sim_2st] aka self.DeviceStatus["sim_1st"] && self.DeviceStatus["sim_2st"] (binded)
-	SimNumber  uint8   `json:"simNumber"`    // tag_99 [sim_t] aka self.DeviceStatus["sim_t"] (binded)
-	MoveSensor bool    `json:"mover_sensor"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
-	SatGps     uint8   `json:"sat_gps"`      // tag_5
-	SatGlonass uint8   `json:"sat_glonass"`  // tag_5
-	GPS        uint8   `json:"gps"`          // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
-	GSM        uint8   `json:"gsm"`          // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
-	LockStatus bool    `json:"lock-status"`  // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
-	Charging   bool    `json:"charging"`     // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
-	// Код сотовой сети
-	Mnc            uint32         `json:"mnc"` // tag_7 cellID
-	DeviceStatus   map[string]int `json:"device_status"`
-	VirtualSensors DeviceVS       `json:"virtual_sensors"`
+	ServerTime     int64          `json:"_ts" bson:"_ts,omitempty"`
+	Timestamp      int64          `json:"time" bson:"time,omitempty"`
+	Online         bool           `json:"online" bson:"online,omitempty"`
+	IMEI           int64          `json:"imei" bson:"imei,omitempty"`
+	Charge         uint8          `json:"charge" bson:"charge,omitempty"`             // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
+	Speed          uint8          `json:"speed" bson:"speed,omitempty"`               // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
+	Alt            uint16         `json:"altitude" bson:"altitude,omitempty"`         // tag_5.altitude
+	Azimut         uint16         `json:"azimut" bson:"azimut,omitempty"`             // tag_5.azimut
+	Lat            float32        `json:"lat" bson:"lat,omitempty"`                   // tag_3
+	Lon            float32        `json:"lon" bson:"lon,omitempty"`                   // tag_4
+	IsSim          bool           `json:"isSim" bson:"isSim,omitempty"`               // tag_99 [sim_1st] && [sim_2st] aka self.DeviceStatus["sim_1st"] && self.DeviceStatus["sim_2st"] (binded)
+	SimNumber      uint8          `json:"simNumber" bson:"simNumber,omitempty"`       // tag_99 [sim_t] aka self.DeviceStatus["sim_t"] (binded)
+	MoveSensor     bool           `json:"mover_sensor" bson:"mover_sensor,omitempty"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
+	SatGps         uint8          `json:"sat_gps" bson:"sat_gps,omitempty"`           // tag_5
+	SatGlonass     uint8          `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5
+	GPS            uint8          `json:"gps" bson:"gps,omitempty"`                   // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
+	GSM            uint8          `json:"gsm" bson:"gsm,omitempty"`                   // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
+	LockStatus     bool           `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
+	Charging       bool           `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
+	Mnc            uint32         `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
+	DeviceStatus   map[string]int `json:"device_status" bson:"device_status,omitempty"`
+	VirtualSensors DeviceVS       `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -569,7 +570,19 @@ func bootHTTP() {
 	http.ListenAndServe(":8080", nil)
 }
 
+var scooterColl *mongo.Collection
+var ctx = context.TODO()
+
 func main() {
+
+	// mgClient, err := mg.Connect(ctx, "mongodb://localhost:27017")
+
+	// if (err) != nil {
+	// 	log.Fatalln(err.Error())
+	// }
+
+	// scooterColl = mgClient.Database("iot").Collection("scooters")
+
 	serve, err := net.Listen("tcp", ":20550")
 
 	devices = make([]*Device, 0)
