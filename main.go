@@ -296,14 +296,11 @@ func handleServe(conn net.Conn) {
 			// 	ParcelNum: hexPackageData[2:4],
 			// }
 
-			hexPacket := &HEXPacket{
-				TypeOfContent: hexPackageData[4:6],
-				PacketDataLen: hexPackageData[6:8],
-				Unixtime:      hexPackageData[8:16],
-			}
-
-			timestamp := hexToDec(BytesToHexString(reverseBytes(hexPacket.Unixtime)))
-			device.Timestamp = timestamp
+			// hexPacket := &HEXPacket{
+			// 	TypeOfContent: hexPackageData[4:6],
+			// 	PacketDataLen: hexPackageData[6:8],
+			// 	Unixtime:      hexPackageData[8:16],
+			// }
 
 			// if !isCmdSended {
 			// 	sendTestCMD(conn)
@@ -327,7 +324,11 @@ func handleServe(conn net.Conn) {
 					hexPacket.PacketDataLen = hexPackageData[start : start+2]
 					dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
 					start += 4 // skip len
+
 					hexPacket.Unixtime = hexPackageData[start : start+8]
+					timestamp := hexToDec(BytesToHexString(reverseBytes(hexPacket.Unixtime)))
+					device.Timestamp = timestamp
+
 					start += 8 // skip ts
 					hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
 					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
