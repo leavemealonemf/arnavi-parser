@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net"
@@ -45,16 +46,26 @@ type HEXPacket struct {
 	Checksum      string
 }
 
+type DeviceVSStatementFlags struct {
+	MotorRunning   bool   `json:'motor_running'`
+	Mode           string `json:'mode'`
+	Charging       bool   `json:'charging'`
+	ScreenOff      bool   `json:'screen_off'`
+	PedestrianMode bool   `json:'pedestrian_mode'`
+	Overheat       bool   `json:'overheat'`
+	ScooterType    uint8  `json:'scooter_type'`
+}
+
 type DeviceVS struct {
-	SpeedKMH                   uint8
-	AverageCharge              uint8
-	StatementFlags             map[string][]uint8
-	MainBatteryCharge          uint8
-	AdditionalBatteryCharge    uint8
-	ErrorCode                  uint8
-	MileagePerTrip             uint32
-	MotorWheelControllerErrors uint16
-	BMSErrors                  uint8
+	SpeedKMH                   uint8                  `json:'speed_kmh'`
+	AverageBatteryCharge       uint8                  `json:'avg_battery_charge'`
+	StatementFlags             DeviceVSStatementFlags `json:'statement_flags'`
+	MainBatteryCharge          uint8                  `json:'main_battery_charge'`
+	AdditionalBatteryCharge    uint8                  `json:'additional_battery_charge'`
+	ErrorCode                  uint8                  `json:'err_code'`
+	MileagePerTrip             uint32                 `json:'mileage_per_trip'`
+	MotorWheelControllerErrors uint16                 `json:'motor_wheel_controller_errors'`
+	BMSErrors                  uint8                  `json:'bms_errors'`
 }
 
 type Device struct {
@@ -69,11 +80,11 @@ type Device struct {
 	SatGps     uint8   `json:'sat_gps'`
 	SatGlonass uint8   `json:'sat_glonass'`
 	// Код сотовой сети
-	Mnc            uint32 `json:'mnc'`
-	Level          uint32 `json:'level'`
-	IMEI           int64  `json:'imei'`
-	DeviceStatus   map[string]int
-	VirtualSensors DeviceVS
+	Mnc            uint32         `json:'mnc'`
+	Level          uint32         `json:'level'`
+	IMEI           int64          `json:'imei'`
+	DeviceStatus   map[string]int `json:'device_status'`
+	VirtualSensors DeviceVS       `json:'virtual_sensors'`
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -152,6 +163,38 @@ func sendTestCMD(conn net.Conn) {
 	// 7B08FF57FF314e55513300007D
 	// 7B03FF343300017D
 	conn.Write(sComPackage)
+}
+
+func DecodeVSStatementFlags(hexStr string, device *Device) {
+	data, err := hex.DecodeString(hexStr)
+	if err != nil || len(data) < 2 {
+		fmt.Printf("[DecodeVSStatementFlags] Invalid hex string: %s", hexStr)
+		return
+	}
+
+	byte0 := data[0]
+	byte1 := data[1]
+
+	motorRunning := byte0&0x01 != 0
+	mode := (byte0 >> 1) & 0x03
+	charging := byte0&0x08 != 0
+	screenOff := byte0&0x10 != 0
+	pedestrianMode := byte0&0x20 != 0
+	overheat := byte0&0x80 != 0
+
+	modes := map[byte]string{
+		0b00: "D",
+		0b01: "ECO",
+		0b10: "S",
+	}
+
+	device.VirtualSensors.StatementFlags.MotorRunning = motorRunning
+	device.VirtualSensors.StatementFlags.Mode = modes[mode]
+	device.VirtualSensors.StatementFlags.Charging = charging
+	device.VirtualSensors.StatementFlags.ScreenOff = screenOff
+	device.VirtualSensors.StatementFlags.PedestrianMode = pedestrianMode
+	device.VirtualSensors.StatementFlags.Overheat = overheat
+	device.VirtualSensors.StatementFlags.ScooterType = byte1
 }
 
 func handleServe(conn net.Conn) {
@@ -288,7 +331,6 @@ func handleServe(conn net.Conn) {
 					hexPacket.Unixtime = hexPackageData[start : start+8]
 					start += 8 // skip ts
 					hexPacket.TagsData = hexPackageData[start : start+dataLenBytes]
-					// checksum := hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
 					packetChecksum := PacketHexChecksum(hexPacket)
@@ -312,6 +354,7 @@ func handleServe(conn net.Conn) {
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
+						// vs sensors
 						case 190:
 							internalTagIDDec := hexToDec(string(hexPacket.TagsData[i+2 : i+4]))
 							internalTagParamRv := BytesToHexString(reverseBytes(hexPacket.TagsData[i+4 : i+10]))
@@ -319,10 +362,38 @@ func handleServe(conn net.Conn) {
 							case 61:
 								speedKmh := hexToDec(internalTagParamRv)
 								device.VirtualSensors.SpeedKMH = uint8(speedKmh)
-								fmt.Println("DEVICE CURRENT SPEED", device.VirtualSensors.SpeedKMH)
+								break
+							case 62:
+								avgBtCharge := hexToDec(internalTagParamRv)
+								device.VirtualSensors.AverageBatteryCharge = uint8(avgBtCharge)
+								break
+							case 63:
+								DecodeVSStatementFlags(internalTagParamRv, &device)
+								break
+							case 66:
+								mainBtCharge := hexToDec(internalTagParamRv)
+								device.VirtualSensors.MainBatteryCharge = uint8(mainBtCharge)
+							case 67:
+								additionalBtCharge := hexToDec(internalTagParamRv)
+								device.VirtualSensors.AdditionalBatteryCharge = uint8(additionalBtCharge)
+							case 68:
+								errCode := hexToDec(internalTagParamRv)
+								device.VirtualSensors.ErrorCode = uint8(errCode)
+							case 69:
+								mileagePerTrip := hexToDec(internalTagParamRv)
+								device.VirtualSensors.MileagePerTrip = uint32(mileagePerTrip)
+							case 70:
+								motorWheelControllerErrors := hexToDec(internalTagParamRv)
+								device.VirtualSensors.MotorWheelControllerErrors = uint16(motorWheelControllerErrors)
+							case 71:
+								bmsError := hexToDec(internalTagParamRv)
+								device.VirtualSensors.BMSErrors = uint8(bmsError)
+							default:
+								break
 							}
 							fmt.Printf("190_tag_vs_id: %v\n190_tag_vs_param: %v\n", internalTagIDDec, internalTagParamRv)
 							break
+						// device status
 						case 99:
 							tagParamRv := BytesToHexString(reverseBytes(tagParam))
 							num, _ := strconv.ParseInt(tagParamRv, 16, 64)
@@ -344,8 +415,6 @@ func handleServe(conn net.Conn) {
 								device.DeviceStatus[assotiation] = devicePreResult[i]
 							}
 
-							fmt.Println("tag_99 mapped:", devicePreResult)
-							fmt.Println("tag_99 info:", device.DeviceStatus)
 							break
 						case 6:
 							break
@@ -371,6 +440,8 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
+			marshal, _ := json.Marshal(device)
+			fmt.Println(marshal)
 			// fmt.Println("[LINE 241] Get package. Sending SERVER_COM...")
 			// sComPackage, _ := hex.DecodeString("7B00017D")
 			// conn.Write(sComPackage)

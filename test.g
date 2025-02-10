@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"fmt"
+	"log"
 	"strconv"
 )
 
@@ -112,18 +113,54 @@ func main() {
 	// 	fmt.Printf("Бит %2d: %d\n", i, bit)
 	// }
 
-	num := uint32(0x190700)
-	newFlags := byte(0x19)
-	newType := byte((num >> 8) & 0xFF)
-	fmt.Printf("Флаги состояний: %08b\n", newFlags)
-	fmt.Printf("Тип устройства: %d\n", newType)
-	67A8C24B
-	fmt.Println(PacketHexChecksum("67A8C24B"))
+	// 190700  000719
+
+	// num := hexToDec("000719")
+	// num := uint32(0x000719)
+
+	decodeStatus("000719")
+	// newFlags := byte(0x19)
+	// newType := byte((num >> 8) & 0xFF)
+	// fmt.Printf("Флаги состояний: %08b\n", newFlags)
+	// fmt.Printf("Тип устройства: %d\n", newType)
+
+	// fmt.Println(PacketHexChecksum("67A8C24B"))
 }
 
 func hexToDec(hexString string) int64 {
 	dec, _ := strconv.ParseInt(hexString, 16, 64)
 	return dec
+}
+
+func decodeStatus(hexStr string) {
+	data, err := hex.DecodeString(hexStr)
+	if err != nil || len(data) < 2 {
+		log.Fatalf("Invalid hex string: %s", hexStr)
+	}
+
+	byte0 := data[0]
+	byte1 := data[1]
+
+	motorRunning := byte0&0x01 != 0
+	mode := (byte0 >> 1) & 0x03
+	charging := byte0&0x08 != 0
+	screenOff := byte0&0x10 != 0
+	pedestrianMode := byte0&0x20 != 0
+	overheat := byte0&0x80 != 0
+
+	modes := map[byte]string{
+		0b00: "D",
+		0b01: "ECO",
+		0b10: "S",
+	}
+
+	fmt.Printf("Motor Running: %v\n", motorRunning)
+	fmt.Printf("Mode: %s\n", modes[mode])
+	fmt.Printf("Charging: %v\n", charging)
+	fmt.Printf("Screen Off/Charging Done: %v\n", screenOff)
+	fmt.Printf("Pedestrian Mode: %v\n", pedestrianMode)
+	fmt.Printf("Overheat: %v\n", overheat)
+	fmt.Printf("Scooter Type: %d\n", byte1)
 }
 
 // type of content: 01
