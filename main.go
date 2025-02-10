@@ -503,14 +503,16 @@ func handleServe(conn net.Conn) {
 					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
-						sendServerComSuccessed("239", conn)
+						sendServerComSuccessed("506", conn)
 						fmt.Println("Packet's parsed successfully")
 						break
 					}
 
-				} else {
-					sendServerComFailed("245", conn)
+				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
+					sendServerComSuccessed("512", conn)
 					break
+				} else {
+					sendServerComFailed("515", conn)
 				}
 			}
 
@@ -562,10 +564,29 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "GET" {
+		vars := mux.Vars(r)
+		imei := vars["imei"]
+		cmd := vars["cmd"]
+		decImei, _ := strconv.Atoi(imei)
+
+		c := connections[int64(decImei)]
+
+		if c != nil {
+			sComPackage, _ := hex.DecodeString(cmd)
+			c.conn.Write(sComPackage)
+		}
+
+		fmt.Fprintf(w, "success %v", imei)
+	}
+}
+
 func bootHTTP() {
 	r := mux.NewRouter()
 	r.HandleFunc("/on/{imei}", HTTPCmdHandlerOn)
-	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOn)
+	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
+	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
 	http.Handle("/", r)
 	http.ListenAndServe(":8080", nil)
 }
