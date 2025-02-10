@@ -388,7 +388,7 @@ func handleServe(conn net.Conn) {
 						}
 
 						tagIDDec := hexToDec(string(hexPacket.TagsData[i : i+2]))
-						// tagFull := hexPacket.TagsData[i : i+10]
+						tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
