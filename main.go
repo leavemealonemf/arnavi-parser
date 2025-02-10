@@ -314,25 +314,25 @@ func handleServe(conn net.Conn) {
 			}
 
 			decIMEI := parseIMEI(header.IMEI)
-			isFindImei := false
+			// isFindImei := false
 
-			// VALIDATE IMEI IN DATABASE
-			for i := 0; i < len(testDevices); i++ {
-				if decIMEI == testDevices[i] {
-					fmt.Println("Find imei. Continue...")
-					isFindImei = true
-					break
-				} else {
-					fmt.Println("Find imei error. Break...")
-					break
-				}
-			}
+			// // VALIDATE IMEI IN DATABASE
+			// for i := 0; i < len(testDevices); i++ {
+			// 	if decIMEI == testDevices[i] {
+			// 		fmt.Println("Find imei. Continue...")
+			// 		isFindImei = true
+			// 		break
+			// 	} else {
+			// 		fmt.Println("Find imei error. Break...")
+			// 		break
+			// 	}
+			// }
 
-			if !isFindImei {
-				break
-			}
+			// if !isFindImei {
+			// 	break
+			// }
 
-			// END VALIDATE IMEI IN DATABASE
+			// // END VALIDATE IMEI IN DATABASE
 
 			device.IMEI = decIMEI
 
