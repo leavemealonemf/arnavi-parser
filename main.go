@@ -441,7 +441,7 @@ func handleServe(conn net.Conn) {
 			}
 
 			marshal, _ := json.Marshal(device)
-			fmt.Println(marshal)
+			fmt.Println(string(marshal))
 			// fmt.Println("[LINE 241] Get package. Sending SERVER_COM...")
 			// sComPackage, _ := hex.DecodeString("7B00017D")
 			// conn.Write(sComPackage)
