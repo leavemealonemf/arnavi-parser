@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"net"
 	"net/http"
 	"strconv"
@@ -92,8 +93,7 @@ type Device struct {
 	LockStatus bool    `json:"lock-status"`  // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
 	Charging   bool    `json:"charging"`     // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	// Код сотовой сети
-	Mnc            uint32         `json:"mnc"`   // tag_7 cellID
-	Level          uint32         `json:"level"` // tag_70
+	Mnc            uint32         `json:"mnc"` // tag_7 cellID
 	DeviceStatus   map[string]int `json:"device_status"`
 	VirtualSensors DeviceVS       `json:"virtual_sensors"`
 }
@@ -228,6 +228,29 @@ func BindDeviceMainPropertys(device *Device) {
 	} else {
 		device.IsSim = device.DeviceStatus["sim2_st"] == 1
 	}
+}
+
+func ParseTAG5Data(hexValue string) {
+	data := reverseBytes(hexValue)
+
+	if len(data) < 5 {
+		fmt.Println("Invalid gps tag_5 data length")
+		return
+	}
+
+	speedKnots := float64(data[0]) * 1.852
+	gpsSatellites := data[1] & 0x0F
+	glonassSatellites := (data[1] >> 4) & 0x0F
+	totalSatellites := gpsSatellites + glonassSatellites
+	altitudeMeters := int(data[2]) * 10
+	rate := int(data[3]) * 2
+
+	fmt.Printf("Speed: %.2f km/h\n", speedKnots)
+	fmt.Printf("GPS Satellites: %d\n", gpsSatellites)
+	fmt.Printf("Glonass Satellites: %d\n", glonassSatellites)
+	fmt.Printf("Total Satellites: %d\n", totalSatellites)
+	fmt.Printf("Altitude: %d meters\n", altitudeMeters)
+	fmt.Printf("Rate: %d\n", rate)
 }
 
 func handleServe(conn net.Conn) {
@@ -455,6 +478,18 @@ func handleServe(conn net.Conn) {
 
 							break
 						case 6:
+							break
+						case 3, 4:
+							rvParamNum, _ := strconv.Atoi(BytesToHexString(reverseBytes(tagParam)))
+							v := math.Float32frombits(uint32(rvParamNum))
+							if tagIDDec == 3 {
+								device.Lat = v
+							} else {
+								device.Lon = v
+							}
+							break
+						case 5:
+							ParseTAG5Data(tagParam)
 							break
 						default:
 							break
