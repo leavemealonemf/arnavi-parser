@@ -16,7 +16,9 @@ import (
 
 var testDevices []int64
 var devices []*Device
-var connections []*Connection
+
+// var connections []*Connection
+var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
 
@@ -73,13 +75,21 @@ type Device struct {
 	ServerTime int64   `json:"_ts"`
 	Timestamp  int64   `json:"time"`
 	Online     bool    `json:"online"`
-	Charge     uint8   `json:"charge"`
-	Alt        uint16  `json:"altitude"`
-	Azimut     uint16  `json:"azimut"`
-	Lat        float32 `json:"lat"`
-	Lon        float32 `json:"lon"`
-	SatGps     uint8   `json:"sat_gps"`
-	SatGlonass uint8   `json:"sat_glonass"`
+	Charge     uint8   `json:"charge"`       // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
+	Speed      uint8   `json:"speed"`        // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
+	Alt        uint16  `json:"altitude"`     // tag_5.altitude
+	Azimut     uint16  `json:"azimut"`       // tag_5.azimut
+	Lat        float32 `json:"lat"`          // tag_3
+	Lon        float32 `json:"lon"`          // tag_4
+	IsSim      bool    `json:"isSim"`        // tag_99 [sim_1st] && [sim_2st] aka self.DeviceStatus["sim_1st"] && self.DeviceStatus["sim_2st"] (binded)
+	SimNumber  uint8   `json:"simNumber"`    // tag_99 [sim_t] aka self.DeviceStatus["sim_t"] (binded)
+	MoveSensor bool    `json:"mover_sensor"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
+	SatGps     uint8   `json:"sat_gps"`      // tag_5
+	SatGlonass uint8   `json:"sat_glonass"`  // tag_5
+	GPS        uint8   `json:"gps"`          // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
+	GSM        uint8   `json:"gsm"`          // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
+	LockStatus bool    `json:"lock-status"`  // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
+	Charging   bool    `json:"charging"`     // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	// Код сотовой сети
 	Mnc            uint32         `json:"mnc"`
 	Level          uint32         `json:"level"`
@@ -197,6 +207,23 @@ func DecodeVSStatementFlags(hexStr string, device *Device) {
 	device.VirtualSensors.StatementFlags.Overheat = overheat
 	device.VirtualSensors.StatementFlags.ScooterType = byte1
 }
+
+func bindDeviceMainPropertys(device *Device) {
+	device.Charge = device.VirtualSensors.MainBatteryCharge
+	device.Speed = device.VirtualSensors.SpeedKMH
+	device.MoveSensor = device.DeviceStatus["mw"] == 1
+	device.SimNumber = uint8(device.DeviceStatus["sim_t"])
+	device.GPS = uint8(device.DeviceStatus["nav_st"])
+	device.GSM = uint8(device.DeviceStatus["gsm_st"])
+	device.Charging = device.VirtualSensors.StatementFlags.Charging
+	device.LockStatus = device.DeviceStatus["device_status"] == 2 || device.DeviceStatus["device_status"] == 3
+	if device.DeviceStatus["sim_t"] == 0 {
+		device.IsSim = device.DeviceStatus["sim1_st"] == 1
+	} else {
+		device.IsSim = device.DeviceStatus["sim2_st"] == 1
+	}
+}
+
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
@@ -211,8 +238,6 @@ func handleServe(conn net.Conn) {
 		conn:   conn,
 		device: &device,
 	}
-
-	connections = append(connections, connection)
 
 	for {
 		_, err := conn.Read(buff)
@@ -275,6 +300,7 @@ func handleServe(conn net.Conn) {
 			device.IMEI = decIMEI
 
 			devices = append(devices, &device)
+			connections[decIMEI] = connection
 
 			// send SERVER_COM
 			// 7B0400CA5E9F6F5E7D
@@ -457,12 +483,13 @@ func HTTPCmdHandlerOn(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
+		decImei, _ := strconv.Atoi(imei)
 
-		for i := 0; i < len(connections); i++ {
-			if connections[i].device != nil && strconv.FormatInt(int64(connections[i].device.IMEI), 10) == imei {
-				sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
-				connections[i].conn.Write(sComPackage)
-			}
+		c := connections[int64(decImei)]
+
+		if c != nil {
+			sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
+			c.conn.Write(sComPackage)
 		}
 
 		fmt.Fprintf(w, "success %v", imei)
@@ -473,12 +500,13 @@ func HTTPCmdHandlerOff(w http.ResponseWriter, r *http.Request) {
 	if r.Method == "GET" {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
+		decImei, _ := strconv.Atoi(imei)
 
-		for i := 0; i < len(connections); i++ {
-			if connections[i].device != nil && strconv.FormatInt(int64(connections[i].device.IMEI), 10) == imei {
-				sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
-				connections[i].conn.Write(sComPackage)
-			}
+		c := connections[int64(decImei)]
+
+		if c != nil {
+			sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
+			c.conn.Write(sComPackage)
 		}
 
 		fmt.Fprintf(w, "success %v", imei)
@@ -499,7 +527,7 @@ func main() {
 	devices = make([]*Device, 0)
 	testDevices = make([]int64, 0)
 	testDevices = append(testDevices, 866011050296805)
-	connections = make([]*Connection, 0)
+	connections = map[int64]*Connection{}
 	deviceStatusBitPos = [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
 	deviceIdsBytesAssotiation = map[int]string{
 		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "s3_st", 6: "s2_st", 7: "s1_st", 8: "s0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
