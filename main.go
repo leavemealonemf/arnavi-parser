@@ -525,12 +525,14 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
-			if isBrokePackage {
-				sendServerComSuccessed("527", conn)
-			} else {
-				sendServerComFailed("529", conn)
-				break
-			}
+			fmt.Println("is broke", isBrokePackage)
+			sendServerComSuccessed("527", conn)
+			// if isBrokePackage {
+			// 	sendServerComSuccessed("527", conn)
+			// } else {
+			// 	sendServerComFailed("529", conn)
+			// 	break
+			// }
 
 			timeNow := time.Now()
 			device.ServerTime = timeNow.UnixNano()
