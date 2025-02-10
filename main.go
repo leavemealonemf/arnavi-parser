@@ -91,8 +91,8 @@ type Device struct {
 	LockStatus bool    `json:"lock-status"`  // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
 	Charging   bool    `json:"charging"`     // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	// Код сотовой сети
-	Mnc            uint32         `json:"mnc"`
-	Level          uint32         `json:"level"`
+	Mnc            uint32         `json:"mnc"`   // tag_7 cellID
+	Level          uint32         `json:"level"` // tag_70
 	IMEI           int64          `json:"imei"`
 	DeviceStatus   map[string]int `json:"device_status"`
 	VirtualSensors DeviceVS       `json:"virtual_sensors"`
@@ -208,6 +208,12 @@ func DecodeVSStatementFlags(hexStr string, device *Device) {
 	device.VirtualSensors.StatementFlags.ScooterType = byte1
 }
 
+func AbortTCPDeviceConn(conn *Connection) {
+	if connections[conn.device.IMEI] != nil {
+		delete(connections, conn.device.IMEI)
+	}
+}
+
 func BindDeviceMainPropertys(device *Device) {
 	device.Charge = device.VirtualSensors.MainBatteryCharge
 	device.Speed = device.VirtualSensors.SpeedKMH
@@ -243,6 +249,7 @@ func handleServe(conn net.Conn) {
 		_, err := conn.Read(buff)
 		if err != nil {
 			fmt.Println("Received data err:", err.Error())
+			AbortTCPDeviceConn(connection)
 			break
 		}
 
@@ -283,18 +290,24 @@ func handleServe(conn net.Conn) {
 			}
 
 			decIMEI := parseIMEI(header.IMEI)
+			isFindImei := false
 
 			// VALIDATE IMEI IN DATABASE
 			for i := 0; i < len(testDevices); i++ {
 				if decIMEI == testDevices[i] {
 					fmt.Println("Find imei. Continue...")
+					isFindImei = true
 					break
 				} else {
 					fmt.Println("Find imei error. Break...")
-					conn.Close()
 					break
 				}
 			}
+
+			if !isFindImei {
+				break
+			}
+
 			// END VALIDATE IMEI IN DATABASE
 
 			device.IMEI = decIMEI
@@ -307,7 +320,6 @@ func handleServe(conn net.Conn) {
 			// 67A8C24B
 			// data, err := hex.DecodeString("7B0400CA5E9F6F5E7D")
 			data, _ := hex.DecodeString("7B04001C67A8C24B7D")
-
 			conn.Write(data)
 			fmt.Println("sending server com...")
 			isFirstConn = false
@@ -336,9 +348,8 @@ func handleServe(conn net.Conn) {
 
 			var start int64 = 4
 
-			fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
-
-			fmt.Println("----- PACKETS ------")
+			// fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
+			// fmt.Println("----- PACKETS ------")
 
 			for {
 				hexPacket := &HEXPacket{
@@ -360,7 +371,7 @@ func handleServe(conn net.Conn) {
 					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
 					packetChecksum := PacketHexChecksum(hexPacket)
-					fmt.Println("packet checksum:", packetChecksum)
+					// fmt.Println("packet checksum:", packetChecksum)
 
 					if strings.ToLower(packetChecksum) != hexPacket.Checksum {
 						fmt.Println("Wrong packet checksum. Break...")
@@ -375,8 +386,9 @@ func handleServe(conn net.Conn) {
 							fmt.Println("out of range tags parse")
 							break
 						}
+
 						tagIDDec := hexToDec(string(hexPacket.TagsData[i : i+2]))
-						tagFull := hexPacket.TagsData[i : i+10]
+						// tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
@@ -448,11 +460,11 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
-						fmt.Println("--------------------")
+						// fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
+						// fmt.Println("--------------------")
 					}
 
-					printHexPacketStructData(hexPacket)
+					// printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
 						sendServerComSuccessed("239", conn)
@@ -469,6 +481,7 @@ func handleServe(conn net.Conn) {
 			timeNow := time.Now()
 			device.ServerTime = timeNow.UnixNano()
 			BindDeviceMainPropertys(&device)
+			device.Online = true
 			marshal, _ := json.Marshal(device)
 			fmt.Println(string(marshal))
 		}
