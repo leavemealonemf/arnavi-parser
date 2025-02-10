@@ -430,7 +430,7 @@ func handleServe(conn net.Conn) {
 								device.VirtualSensors.AverageBatteryCharge = uint8(avgBtCharge)
 								break
 							case 63:
-								internalParam := hexPacket.TagsData[i+4 : i+10]
+								internalParam := BytesToHexString(reverseBytes(hexPacket.TagsData[i+4 : i+10]))
 								DecodeVSStatementFlags(internalParam, &device)
 								break
 							case 66:
