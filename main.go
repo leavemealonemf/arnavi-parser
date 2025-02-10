@@ -208,7 +208,7 @@ func DecodeVSStatementFlags(hexStr string, device *Device) {
 	device.VirtualSensors.StatementFlags.ScooterType = byte1
 }
 
-func bindDeviceMainPropertys(device *Device) {
+func BindDeviceMainPropertys(device *Device) {
 	device.Charge = device.VirtualSensors.MainBatteryCharge
 	device.Speed = device.VirtualSensors.SpeedKMH
 	device.MoveSensor = device.DeviceStatus["mw"] == 1
@@ -468,7 +468,7 @@ func handleServe(conn net.Conn) {
 
 			timeNow := time.Now()
 			device.ServerTime = timeNow.UnixNano()
-
+			BindDeviceMainPropertys(&device)
 			marshal, _ := json.Marshal(device)
 			fmt.Println(string(marshal))
 		}
