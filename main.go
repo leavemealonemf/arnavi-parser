@@ -62,13 +62,13 @@ type DeviceVSStatementFlags struct {
 type DeviceVS struct {
 	SpeedKMH                   uint8                  `json:"speed_kmh"`
 	AverageBatteryCharge       uint8                  `json:"avg_battery_charge"`
-	StatementFlags             DeviceVSStatementFlags `json:"statement_flags"`
 	MainBatteryCharge          uint8                  `json:"main_battery_charge"`
 	AdditionalBatteryCharge    uint8                  `json:"additional_battery_charge"`
 	ErrorCode                  uint8                  `json:"err_code"`
 	MileagePerTrip             uint32                 `json:"mileage_per_trip"`
 	MotorWheelControllerErrors uint16                 `json:"motor_wheel_controller_errors"`
 	BMSErrors                  uint8                  `json:"bms_errors"`
+	StatementFlags             DeviceVSStatementFlags `json:"statement_flags"`
 }
 
 type Device struct {
