@@ -75,6 +75,7 @@ type Device struct {
 	ServerTime int64   `json:"_ts"`
 	Timestamp  int64   `json:"time"`
 	Online     bool    `json:"online"`
+	IMEI       int64   `json:"imei"`
 	Charge     uint8   `json:"charge"`       // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
 	Speed      uint8   `json:"speed"`        // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
 	Alt        uint16  `json:"altitude"`     // tag_5.altitude
@@ -93,7 +94,6 @@ type Device struct {
 	// Код сотовой сети
 	Mnc            uint32         `json:"mnc"`   // tag_7 cellID
 	Level          uint32         `json:"level"` // tag_70
-	IMEI           int64          `json:"imei"`
 	DeviceStatus   map[string]int `json:"device_status"`
 	VirtualSensors DeviceVS       `json:"virtual_sensors"`
 }
@@ -460,11 +460,11 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						// fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
-						// fmt.Println("--------------------")
+						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
+						fmt.Println("--------------------")
 					}
 
-					// printHexPacketStructData(hexPacket)
+					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
 						sendServerComSuccessed("239", conn)
