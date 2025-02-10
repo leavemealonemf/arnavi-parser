@@ -487,7 +487,7 @@ func handleServe(conn net.Conn) {
 						case 6:
 							break
 						case 3, 4:
-							rvParamNum, _ := strconv.Atoi(BytesToHexString(reverseBytes(tagParam)))
+							rvParamNum := hexToDec(BytesToHexString(reverseBytes(tagParam)))
 							v := math.Float32frombits(uint32(rvParamNum))
 							if tagIDDec == 3 {
 								device.Lat = v

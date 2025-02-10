@@ -4,6 +4,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 )
 
@@ -118,7 +119,13 @@ func main() {
 	// num := hexToDec("000719")
 	// num := uint32(0x000719)
 
-	decodeStatus("000b00")
+	// decodeStatus("000b00")
+	fmt.Println(BytesToHexString(reverseBytes("0db35342")))
+	// int, err: = strconv.ParseInt("030db35342", 2, 16)
+	rvParamNum, _ := strconv.Atoi(BytesToHexString(reverseBytes("030db35342")))
+	fmt.Println(rvParamNum)
+	v := math.Float32frombits(uint32(hexToDec("4253b30d")))
+	fmt.Println(v)
 	// newFlags := byte(0x19)
 	// newType := byte((num >> 8) & 0xFF)
 	// fmt.Printf("Флаги состояний: %08b\n", newFlags)
