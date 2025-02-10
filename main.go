@@ -311,7 +311,7 @@ func handleServe(conn net.Conn) {
 								var result int64
 								for j := 0; j < len(deviceStatusBitPos[i]); j++ {
 									bit := (num >> deviceStatusBitPos[i][j]) & 1
-									result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
+									result |= bit << (len(deviceStatusBitPos[i]) - j)
 								}
 								devicePreResult[i] = int(result)
 							}
