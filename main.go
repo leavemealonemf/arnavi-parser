@@ -47,44 +47,44 @@ type HEXPacket struct {
 }
 
 type DeviceVSStatementFlags struct {
-	MotorRunning   bool   `json:'motor_running'`
-	Mode           string `json:'mode'`
-	Charging       bool   `json:'charging'`
-	ScreenOff      bool   `json:'screen_off'`
-	PedestrianMode bool   `json:'pedestrian_mode'`
-	Overheat       bool   `json:'overheat'`
-	ScooterType    uint8  `json:'scooter_type'`
+	MotorRunning   bool   `json:"motor_running"`
+	Mode           string `json:"mode"`
+	Charging       bool   `json:"charging"`
+	ScreenOff      bool   `json:"screen_off"`
+	PedestrianMode bool   `json:"pedestrian_mode"`
+	Overheat       bool   `json:"overheat"`
+	ScooterType    uint8  `json:"scooter_type"`
 }
 
 type DeviceVS struct {
-	SpeedKMH                   uint8                  `json:'speed_kmh'`
-	AverageBatteryCharge       uint8                  `json:'avg_battery_charge'`
-	StatementFlags             DeviceVSStatementFlags `json:'statement_flags'`
-	MainBatteryCharge          uint8                  `json:'main_battery_charge'`
-	AdditionalBatteryCharge    uint8                  `json:'additional_battery_charge'`
-	ErrorCode                  uint8                  `json:'err_code'`
-	MileagePerTrip             uint32                 `json:'mileage_per_trip'`
-	MotorWheelControllerErrors uint16                 `json:'motor_wheel_controller_errors'`
-	BMSErrors                  uint8                  `json:'bms_errors'`
+	SpeedKMH                   uint8                  `json:"speed_kmh"`
+	AverageBatteryCharge       uint8                  `json:"avg_battery_charge"`
+	StatementFlags             DeviceVSStatementFlags `json:"statement_flags"`
+	MainBatteryCharge          uint8                  `json:"main_battery_charge"`
+	AdditionalBatteryCharge    uint8                  `json:"additional_battery_charge"`
+	ErrorCode                  uint8                  `json:"err_code"`
+	MileagePerTrip             uint32                 `json:"mileage_per_trip"`
+	MotorWheelControllerErrors uint16                 `json:"motor_wheel_controller_errors"`
+	BMSErrors                  uint8                  `json:"bms_errors"`
 }
 
 type Device struct {
-	ServerTime uint64  `json:'_ts'`
-	Timestamp  uint64  `json:'time'`
-	Online     bool    `json:'online'`
-	Charge     uint8   `json:'charge'`
-	Alt        uint16  `json:'altitude'`
-	Azimut     uint16  `json:'azimut'`
-	Lat        float32 `json:'lat'`
-	Lon        float32 `json:'lon'`
-	SatGps     uint8   `json:'sat_gps'`
-	SatGlonass uint8   `json:'sat_glonass'`
+	ServerTime uint64  `json:"_ts"`
+	Timestamp  uint64  `json:"time"`
+	Online     bool    `json:"online"`
+	Charge     uint8   `json:"charge"`
+	Alt        uint16  `json:"altitude"`
+	Azimut     uint16  `json:"azimut"`
+	Lat        float32 `json:"lat"`
+	Lon        float32 `json:"lon"`
+	SatGps     uint8   `json:"sat_gps"`
+	SatGlonass uint8   `json:"sat_glonass"`
 	// Код сотовой сети
-	Mnc            uint32         `json:'mnc'`
-	Level          uint32         `json:'level'`
-	IMEI           int64          `json:'imei'`
-	DeviceStatus   map[string]int `json:'device_status'`
-	VirtualSensors DeviceVS       `json:'virtual_sensors'`
+	Mnc            uint32         `json:"mnc"`
+	Level          uint32         `json:"level"`
+	IMEI           int64          `json:"imei"`
+	DeviceStatus   map[string]int `json:"device_status"`
+	VirtualSensors DeviceVS       `json:"virtual_sensors"`
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -368,8 +368,8 @@ func handleServe(conn net.Conn) {
 								device.VirtualSensors.AverageBatteryCharge = uint8(avgBtCharge)
 								break
 							case 63:
-								fmt.Println("PARAM:", internalTagParamRv)
-								DecodeVSStatementFlags(internalTagParamRv, &device)
+								internalParam := hexPacket.TagsData[i+4 : i+10]
+								DecodeVSStatementFlags(internalParam, &device)
 								break
 							case 66:
 								mainBtCharge := hexToDec(internalTagParamRv)
