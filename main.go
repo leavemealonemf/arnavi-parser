@@ -24,6 +24,7 @@ var devices []*Device
 var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
+var commands map[string]*Command
 
 type Connection struct {
 	conn   net.Conn
@@ -97,6 +98,10 @@ type Device struct {
 	Mnc            uint32         `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
 	DeviceStatus   map[string]int `json:"device_status" bson:"device_status,omitempty"`
 	VirtualSensors DeviceVS       `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
+}
+
+type Command struct {
+	Val string
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -234,10 +239,10 @@ func BindDeviceMainPropertys(device *Device) {
 func ParseTAG5Data(hexValue string) {
 	data := reverseBytes(hexValue)
 
-	if len(data) < 5 {
-		fmt.Println("Invalid gps tag_5 data length")
-		return
-	}
+	// if len(data) < 5 {
+	// 	fmt.Println("Invalid gps tag_5 data length")
+	// 	return
+	// }
 
 	speedKnots := float64(data[0]) * 1.852
 	gpsSatellites := data[1] & 0x0F
@@ -593,6 +598,31 @@ func bootHTTP() {
 	http.ListenAndServe(":8080", nil)
 }
 
+func initIOTCommands() {
+	commands := map[string]*Command{}
+	commands["set_block_motor_wheel"] = &Command{
+		Val: "7B08FF58FF314E55513300017D",
+	}
+	commands["unset_block_motor_wheel_and_guard_mode"] = &Command{
+		Val: "7B08FF57FF314E55513300007D",
+	}
+	commands["set_guard_mode"] = &Command{
+		Val: "7B08FF5CFF314E55513300057D",
+	}
+	commands["set_service_mode"] = &Command{
+		Val: "7B08FF5DFF314E55513300067D",
+	}
+	commands["set_d_drive_mode"] = &Command{
+		Val: "7B08FF5AFF314E55513303007D",
+	}
+	commands["set_eco_drive_mode"] = &Command{
+		Val: "7B08FF5BFF314E55513303017D",
+	}
+	commands["set_s_drive_mode"] = &Command{
+		Val: "7B08FF5CFF314E55513303027D",
+	}
+}
+
 var scooterColl *mongo.Collection
 var ctx = context.TODO()
 
@@ -616,6 +646,8 @@ func main() {
 	deviceIdsBytesAssotiation = map[int]string{
 		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "s3_st", 6: "s2_st", 7: "s1_st", 8: "s0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
 	}
+
+	initIOTCommands()
 
 	if err != nil {
 		log.Fatalln("Startup serve error:", err.Error())

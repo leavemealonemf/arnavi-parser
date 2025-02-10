@@ -118,7 +118,7 @@ func main() {
 	// num := hexToDec("000719")
 	// num := uint32(0x000719)
 
-	decodeStatus("000719")
+	decodeStatus("000b00")
 	// newFlags := byte(0x19)
 	// newType := byte((num >> 8) & 0xFF)
 	// fmt.Printf("Флаги состояний: %08b\n", newFlags)
