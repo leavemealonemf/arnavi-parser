@@ -569,6 +569,8 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
 		cmd := vars["cmd"]
+		fmt.Println(cmd)
+		fmt.Println([]byte(cmd))
 		decImei, _ := strconv.Atoi(imei)
 
 		c := connections[int64(decImei)]
