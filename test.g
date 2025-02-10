@@ -75,26 +75,26 @@ func main() {
 
 	// Разбираем биты по частям
 	// num := int(0x0e000232)
-	deviceStatusBitPos := [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
+	// deviceStatusBitPos := [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
 
 	// // deviceIdsBytesAssotiation := map[int]string{
 	// // 	0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "S3_st", 6: "S2_st", 7: "S1_st", 8: "S0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
 	// // }
 
-	devicePreResult := map[int]int{}
+	// devicePreResult := map[int]int{}
 
-	num := int64(0x0a008232)
+	// num := int64(0x0a008232)
 
-	for i := 0; i < len(deviceStatusBitPos); i++ {
-		var result int64
-		for j := 0; j < len(deviceStatusBitPos[i]); j++ {
-			bit := (num >> deviceStatusBitPos[i][j]) & 1
-			result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
-		}
-		devicePreResult[i] = int(result)
-	}
+	// for i := 0; i < len(deviceStatusBitPos); i++ {
+	// 	var result int64
+	// 	for j := 0; j < len(deviceStatusBitPos[i]); j++ {
+	// 		bit := (num >> deviceStatusBitPos[i][j]) & 1
+	// 		result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
+	// 	}
+	// 	devicePreResult[i] = int(result)
+	// }
 
-	fmt.Println(devicePreResult)
+	// fmt.Println(devicePreResult)
 
 	// for i := 0; i < len(devicePreResult); i++ {
 	// 	assotiation := ids_bytes_assotiation[i]
@@ -105,20 +105,20 @@ func main() {
 	// fmt.Printf("device_pre_result: %v\n", devicePreResult)
 	// fmt.Printf("device_result: %v\n", deviceResult)
 
-	num2 := int64(0x0a008232)
+	// num2 := int64(0x0a008232)
 
-	for i := 31; i >= 0; i-- {
-		bit := (num2 >> i) & 1
-		fmt.Printf("Бит %2d: %d\n", i, bit)
-	}
+	// for i := 31; i >= 0; i-- {
+	// 	bit := (num2 >> i) & 1
+	// 	fmt.Printf("Бит %2d: %d\n", i, bit)
+	// }
 
-	// num := uint32(0x190700)
-	// newFlags := byte(0x19)
-	// newType := byte((num >> 8) & 0xFF)
-	// fmt.Printf("Флаги состояний: %08b\n", newFlags)
-	// fmt.Printf("Тип устройства: %d\n", newType)
-	// 67A8C24B
-	// fmt.Println(PacketHexChecksum("67A8C24B"))
+	num := uint32(0x190700)
+	newFlags := byte(0x19)
+	newType := byte((num >> 8) & 0xFF)
+	fmt.Printf("Флаги состояний: %08b\n", newFlags)
+	fmt.Printf("Тип устройства: %d\n", newType)
+	67A8C24B
+	fmt.Println(PacketHexChecksum("67A8C24B"))
 }
 
 func hexToDec(hexString string) int64 {
