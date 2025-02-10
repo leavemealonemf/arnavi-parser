@@ -311,7 +311,7 @@ func handleServe(conn net.Conn) {
 								var result int64
 								for j := 0; j < len(deviceStatusBitPos[i]); j++ {
 									bit := (num >> deviceStatusBitPos[i][j]) & 1
-									result |= bit << (len(deviceStatusBitPos[i]) - j)
+									result |= bit << (len(deviceStatusBitPos[i]) - j - 1)
 								}
 								devicePreResult[i] = int(result)
 							}
@@ -321,6 +321,7 @@ func handleServe(conn net.Conn) {
 								device.DeviceStatus[assotiation] = devicePreResult[i]
 							}
 
+							fmt.Println("tag_99 mapped:", devicePreResult)
 							fmt.Println("tag_99 info:", device.DeviceStatus)
 							break
 						case 6:
