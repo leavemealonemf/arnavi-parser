@@ -306,11 +306,9 @@ func ParseTags8And201(revBytes []byte, device *Device, simNum uint8) {
 		return
 	}
 
-	signalLevel := revBytes[0] & 0x1F
-
-	mcc := uint16(revBytes[1])<<8 | uint16(revBytes[2])
-
-	mnc := revBytes[3]
+	signalLevel := revBytes[0]                          // Уровень сигнала (0-31)
+	mcc := uint16(revBytes[1])<<8 | uint16(revBytes[2]) // Mobile Country Code (MCC)
+	mnc := revBytes[3]                                  // Mobile Network Code (MNC)
 
 	operator := map[byte]string{
 		0x01: "МТС",
