@@ -256,7 +256,7 @@ func BindDeviceMainPropertys(device *Device) {
 	}
 }
 
-func ParseTAG1Data(revBytes string, device *Device) {
+func ParseTAG1Data(revBytes []byte, device *Device) {
 	if len(revBytes) != 4 {
 		return
 	}
@@ -593,6 +593,9 @@ func handleServe(conn net.Conn) {
 							break
 						case 5:
 							ParseTAG5Data(tagParam, &device)
+							break
+						case 1:
+							ParseTAG1Data(reverseBytes(tagParam), &device)
 							break
 						default:
 							break
