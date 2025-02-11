@@ -126,8 +126,8 @@ type Device struct {
 	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
 	TagFive         TAGFive           `json:"tag_5" bson:"tag_5,omitempty"`
 	TAGOne          TAGOne            `json:"tag_1" bson:"tag_1,omitempty"`
-	SimOne          SimStatus         `json:"sim_1" bson:"sim_1,omitempty"`
-	SimTwo          SimStatus         `json:"sim_2" bson:"sim_2,omitempty"`
+	SimOne          *SimStatus        `json:"sim_1" bson:"sim_1,omitempty"`
+	SimTwo          *SimStatus        `json:"sim_2" bson:"sim_2,omitempty"`
 	VirtualSensors  DeviceVS          `json:"vs" bson:"vs,omitempty"`
 	ICCIDParts      map[uint8][]byte  `json"-"`
 }
@@ -287,9 +287,15 @@ func ParseTags7And200(revBytes []byte, device *Device, simNum uint8) {
 	cellID := uint16(revBytes[2])<<8 | uint16(revBytes[3])
 
 	if simNum == 1 {
+		if device.SimOne == nil {
+			device.SimOne = &SimStatus{}
+		}
 		device.SimOne.LAC = lac
 		device.SimOne.CellID = cellID
 	} else {
+		if device.SimTwo == nil {
+			device.SimTwo = &SimStatus{}
+		}
 		device.SimTwo.LAC = lac
 		device.SimTwo.CellID = cellID
 	}
@@ -314,11 +320,17 @@ func ParseTags8And201(revBytes []byte, device *Device, simNum uint8) {
 	}[mnc]
 
 	if simNum == 1 {
+		if device.SimOne == nil {
+			device.SimOne = &SimStatus{}
+		}
 		device.SimOne.GSMSigLvl = signalLevel
 		device.SimOne.MobileCountyCode = mcc
 		device.SimOne.MobileNetCode = mnc
 		device.SimOne.OperatorName = operator
 	} else {
+		if device.SimTwo == nil {
+			device.SimTwo = &SimStatus{}
+		}
 		device.SimTwo.GSMSigLvl = signalLevel
 		device.SimTwo.MobileCountyCode = mcc
 		device.SimTwo.MobileNetCode = mnc
