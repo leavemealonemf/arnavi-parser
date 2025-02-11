@@ -89,6 +89,15 @@ type TAGOne struct {
 	InternalVilt uint16 `json:"int_volt" bson:"int_volt,omitempty"`
 }
 
+type SimStatus struct {
+	LAC              uint16 `json:"lac" bson:"lac,omitempty"`
+	CellID           uint16 `json:"cell_id" bson:"cell_id,omitempty"`
+	GSMSigLvl        uint8  `json:"sig_lvl_gsm" bson:"sig_lvl_gsm,omitempty"`
+	MobileNetCode    uint8  `json:"mnc" bson:"mnc,omitempty"`
+	MobileCountyCode uint16 `json:"mcc" bson:"mcc,omitempty"`
+	OperatorName     string `json:"operator_name" bson:"operator_name,omitempty"`
+}
+
 type Device struct {
 	ServerTime      int64             `json:"_ts" bson:"_ts,omitempty"`
 	Timestamp       int64             `json:"time" bson:"time,omitempty"`
@@ -117,7 +126,10 @@ type Device struct {
 	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
 	TagFive         TAGFive           `json:"tag_5" bson:"tag_5,omitempty"`
 	TAGOne          TAGOne            `json:"tag_1" bson:"tag_1,omitempty"`
+	SimOne          SimStatus         `json:"sim_1" bson:"sim_1,omitempty"`
+	SimTwo          SimStatus         `json:"sim_2" bson:"sim_2,omitempty"`
 	VirtualSensors  DeviceVS          `json:"vs" bson:"vs,omitempty"`
+	ICCIDParts      map[uint8][]byte
 }
 
 type Command struct {
@@ -264,6 +276,58 @@ func ParseTAG1Data(revBytes []byte, device *Device) {
 	internalVoltage := uint16(revBytes[2])<<8 | uint16(revBytes[3])
 	device.TAGOne.ExternalVolt = externalVoltage
 	device.TAGOne.InternalVilt = internalVoltage
+}
+
+func ParseTags7And200(revBytes []byte, device *Device, simNum uint8) {
+	if len(revBytes) != 4 {
+		return
+	}
+
+	lac := uint16(revBytes[0])<<8 | uint16(revBytes[1])
+	cellID := uint16(revBytes[2])<<8 | uint16(revBytes[3])
+
+	if simNum == 1 {
+		device.SimOne.LAC = lac
+		device.SimOne.CellID = cellID
+	} else {
+		device.SimTwo.LAC = lac
+		device.SimTwo.CellID = cellID
+	}
+}
+
+func ParseTags8And201(revBytes []byte, device *Device, simNum uint8) {
+	if len(revBytes) != 4 {
+		return
+	}
+
+	signalLevel := revBytes[0] & 0x1F
+
+	mcc := uint16(revBytes[1])<<8 | uint16(revBytes[2])
+
+	mnc := revBytes[3]
+
+	operator := map[byte]string{
+		0x01: "МТС",
+		0x02: "МегаФон",
+		0x07: "СМАРТС",
+		0x99: "Билайн",
+	}[mnc]
+
+	if simNum == 1 {
+		device.SimOne.GSMSigLvl = signalLevel
+		device.SimOne.MobileCountyCode = mcc
+		device.SimOne.MobileNetCode = mnc
+		device.SimOne.OperatorName = operator
+	} else {
+		device.SimTwo.GSMSigLvl = signalLevel
+		device.SimTwo.MobileCountyCode = mcc
+		device.SimTwo.MobileNetCode = mnc
+		device.SimTwo.OperatorName = operator
+	}
+}
+
+func processICCID(revBytes []byte, device *Device, partNum uint8) {
+	device.ICCIDParts[partNum] = revBytes
 }
 
 func ParseTAG5Data(hexValue string, device *Device) {
@@ -596,6 +660,28 @@ func handleServe(conn net.Conn) {
 							break
 						case 1:
 							ParseTAG1Data(reverseBytes(tagParam), &device)
+							break
+						case 7, 200:
+							if tagIDDec == 7 {
+								ParseTags7And200(reverseBytes(tagParam), &device, 1)
+							} else {
+								ParseTags7And200(reverseBytes(tagParam), &device, 2)
+							}
+							break
+						case 8, 201:
+							if tagIDDec == 8 {
+								ParseTags8And201(reverseBytes(tagParam), &device, 1)
+							} else {
+								ParseTags8And201(reverseBytes(tagParam), &device, 2)
+							}
+							break
+
+						case 253, 254, 202, 230:
+							if tagIDDec == 253 || tagIDDec == 202 {
+								processICCID(reverseBytes(tagParam), &device, 1)
+							} else {
+								processICCID(reverseBytes(tagParam), &device, 2)
+							}
 							break
 						default:
 							break

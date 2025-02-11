@@ -134,16 +134,63 @@ func main() {
 
 	// Исходное значение (32 бита)
 
-	hexString := "8a3a0fe5"
+	// data, _ := hex.DecodeString("16460d05")
+	// data, _ := hex.DecodeString("63000000")
 
+	// cityCode := uint16(data[0])<<8 | uint16(data[1])
+
+	// // Извлекаем идентификатор ячейки (следующие 2 байта)
+	// cellID := uint16(data[2])<<8 | uint16(data[3])
+
+	// fmt.Printf("Код города: 0x%04X (%d)\n", cityCode, cityCode)
+	// fmt.Printf("Идентификатор ячейки: 0x%04X (%d)\n", cellID, cellID)
+
+	// signalLevel := data[0] & 0x1F
+
+	// mcc := uint16(data[1])<<8 | uint16(data[2])
+
+	// mnc := data[3]
+
+	// operator := map[byte]string{
+	// 	0x01: "МТС",
+	// 	0x02: "МегаФон",
+	// 	0x07: "СМАРТС",
+	// 	0x99: "Билайн",
+	// }[mnc]
+
+	// // Вывод данных
+	// fmt.Printf("Уровень сигнала: %d (из 31)\n", signalLevel)
+	// fmt.Printf("Код страны (MCC): %d\n", mcc)
+	// fmt.Printf("Код сети (MNC): %d (%s)\n", mnc, operator)
+
+	// data, err := hex.DecodeString(hexString)
+	// if err != nil || len(data) != 4 {
+	// 	fmt.Println("Ошибка декодирования данных")
+	// 	return
+	// }
+
+	// externalVoltage := uint16(data[0])<<8 | uint16(data[1])
+	// internalVoltage := uint16(data[2])<<8 | uint16(data[3])
+
+	hexString := "fde2e12c16fecc6a9105"
+
+	// Декодируем строку в байты
 	data, err := hex.DecodeString(hexString)
-	if err != nil || len(data) != 4 {
+	if err != nil || len(data) != 10 {
 		fmt.Println("Ошибка декодирования данных")
 		return
 	}
 
-	externalVoltage := uint16(data[0])<<8 | uint16(data[1])
-	internalVoltage := uint16(data[2])<<8 | uint16(data[3])
+	// Разбираем первые 5 байтов (iccid1p1)
+	iccid1p1 := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+	iccid1p1 = (iccid1p1 << 8) | uint32(data[4]) // Добавляем последний байт
+
+	// Разбираем следующие 5 байтов (iccid1p2)
+	iccid1p2 := uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
+	iccid1p2 = (iccid1p2 << 8) | uint32(data[9]) // Добавляем последний байт
+
+	// Вывод результата в формате ICCID1=89xxxxxxxxx xxxxxxxxx
+	fmt.Printf("ICCID1=89%09d%09d\n", iccid1p1, iccid1p2)
 
 }
 
