@@ -75,6 +75,15 @@ type DeviceVS struct {
 	StatementFlags             DeviceVSStatementFlags `json:"statement_flags" bson:"statement_flags,omitempty"`
 }
 
+type TAGFive struct {
+	SpeedKnots      float64 `json:"speed" bson:"speed,omitempty"`
+	Alt             int     `json:"altitude" bson:"altitude,omitempty"`
+	Azimut          int     `json:"azimut" bson:"azimut,omitempty"`
+	SatGps          uint8   `json:"sat_gps" bson:"sat_gps,omitempty"`
+	SatGlonass      uint8   `json:"sat_glonass" bson:"sat_glonass,omitempty"`
+	TotalSatellites byte    `json:"total_sat" bson:"total_sat,omitempty"`
+}
+
 type Device struct {
 	ServerTime      int64             `json:"_ts" bson:"_ts,omitempty"`
 	Timestamp       int64             `json:"time" bson:"time,omitempty"`
@@ -98,9 +107,10 @@ type Device struct {
 	LockStatus      bool              `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
 	Charging        bool              `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	Mnc             uint32            `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
-	DeviceStatus2   map[string]int    `json:"ds2" bson:"ds2,omitempty"`
-	DeviceStatus1   map[string]uint32 `json:"ds1" bson:"ds1,omitempty"`
+	DeviceStatus2   map[string]int    `json:"tag_99" bson:"tag_99,omitempty"`
+	DeviceStatus1   map[string]uint32 `json:"tag_9" bson:"tag_9,omitempty"`
 	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
+	TagFive         TAGFive           `json:"tag_5" bson:"tag_5,omitempty"`
 	VirtualSensors  DeviceVS          `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
 }
 
@@ -249,6 +259,13 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	totalSatellites := gpsSatellites + glonassSatellites
 	altitudeMeters := int(data[2]) * 10
 	rate := int(data[3]) * 2
+
+	device.TagFive.SpeedKnots = speedKnots
+	device.TagFive.SatGps = gpsSatellites
+	device.TagFive.SatGlonass = glonassSatellites
+	device.TagFive.Alt = altitudeMeters
+	device.TagFive.Azimut = rate
+	device.TagFive.TotalSatellites = totalSatellites
 
 	device.SpeedKnots = speedKnots
 	device.SatGps = gpsSatellites
