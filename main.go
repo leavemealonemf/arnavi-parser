@@ -92,7 +92,7 @@ type Device struct {
 	MoveSensor      bool           `json:"mover_sensor" bson:"mover_sensor,omitempty"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
 	SatGps          uint8          `json:"sat_gps" bson:"sat_gps,omitempty"`           // tag_5 (binded)
 	SatGlonass      uint8          `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5 (binded)
-	TotalSatellites byte           `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5 (binded)
+	TotalSatellites byte           `json:"total_sat" bson:"total_sat,omitempty"`       // tag_5 (binded)
 	GPS             uint8          `json:"gps" bson:"gps,omitempty"`                   // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
 	GSM             uint8          `json:"gsm" bson:"gsm,omitempty"`                   // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
 	LockStatus      bool           `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
