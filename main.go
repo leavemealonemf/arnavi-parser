@@ -258,7 +258,7 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	device.TotalSatellites = totalSatellites
 }
 
-func ParceTAG6(hexString string, device *Device) {
+func ParseTAG6(hexString string, device *Device) {
 	value := uint32(hexToDec(hexString))
 
 	if (value>>24)&0xFF != 0x01 {
@@ -547,7 +547,7 @@ func handleServe(conn net.Conn) {
 							ParseTAG9(tagParamRv, &device)
 							break
 						case 6:
-							ParseTAG9(tagParam, &device)
+							ParseTAG6(tagParam, &device)
 							break
 						case 3, 4:
 							rvParamNum := hexToDec(BytesToHexString(reverseBytes(tagParam)))
