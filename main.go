@@ -129,7 +129,7 @@ type Device struct {
 	SimOne          *SimStatus        `json:"sim_1" bson:"sim_1,omitempty"`
 	SimTwo          *SimStatus        `json:"sim_2" bson:"sim_2,omitempty"`
 	VirtualSensors  DeviceVS          `json:"vs" bson:"vs,omitempty"`
-	ICCIDParts      map[uint8][]byte  `json"-" bson:"-, omitempty"`
+	ICCIDParts      map[uint8][]byte  `json:"iccid_parts" bson:"iccid_parts,omitempty"`
 }
 
 type Command struct {
