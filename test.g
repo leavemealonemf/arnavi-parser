@@ -133,18 +133,17 @@ func main() {
 	// ParseTAG9("F14CB000")
 
 	// Исходное значение (32 бита)
-	value := uint32(hexToDec("01010000"))
 
-	if (value>>24)&0xFF != 0x01 {
-		fmt.Println("Неверный режим входа TAG6. Пропускаем обработку.")
+	hexString := "8a3a0fe5"
+
+	data, err := hex.DecodeString(hexString)
+	if err != nil || len(data) != 4 {
+		fmt.Println("Ошибка декодирования данных")
 		return
 	}
 
-	ignitionState := (value >> 0) & 0x01    // бит 0 - зажигание
-	doorLock1State := (value >> 8) & 0x01   // бит 8 - замок 1
-	doorLock2State := (value >> 9) & 0x01   // бит 9 - замок 2
-	flashlightState := (value >> 16) & 0x01 // бит 16 - фонарик
-	usbPowerState := (value >> 18) & 0x01   // бит 18 - питание USB порта
+	externalVoltage := uint16(data[0])<<8 | uint16(data[1])
+	internalVoltage := uint16(data[2])<<8 | uint16(data[3])
 
 }
 

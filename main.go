@@ -84,6 +84,11 @@ type TAGFive struct {
 	TotalSatellites byte    `json:"total_sat" bson:"total_sat,omitempty"`
 }
 
+type TAGOne struct {
+	ExternalVolt uint16 `json:"ext_volt" bson:"ext_volt,omitempty"`
+	InternalVilt uint16 `json:"int_volt" bson:"int_volt,omitempty"`
+}
+
 type Device struct {
 	ServerTime      int64             `json:"_ts" bson:"_ts,omitempty"`
 	Timestamp       int64             `json:"time" bson:"time,omitempty"`
@@ -111,7 +116,8 @@ type Device struct {
 	DeviceStatus1   map[string]uint32 `json:"tag_9" bson:"tag_9,omitempty"`
 	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
 	TagFive         TAGFive           `json:"tag_5" bson:"tag_5,omitempty"`
-	VirtualSensors  DeviceVS          `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
+	TAGOne          TAGOne            `json:"tag_1" bson:"tag_1,omitempty"`
+	VirtualSensors  DeviceVS          `json:"vs" bson:"vs,omitempty"`
 }
 
 type Command struct {
@@ -248,6 +254,16 @@ func BindDeviceMainPropertys(device *Device) {
 	} else {
 		device.IsSim = device.DeviceStatus2["sim2_st"] == 1
 	}
+}
+
+func ParseTAG1Data(revBytes string, device *Device) {
+	if len(revBytes) != 4 {
+		return
+	}
+	externalVoltage := uint16(revBytes[0])<<8 | uint16(revBytes[1])
+	internalVoltage := uint16(revBytes[2])<<8 | uint16(revBytes[3])
+	device.TAGOne.ExternalVolt = externalVoltage
+	device.TAGOne.InternalVilt = internalVoltage
 }
 
 func ParseTAG5Data(hexValue string, device *Device) {
