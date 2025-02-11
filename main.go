@@ -76,28 +76,30 @@ type DeviceVS struct {
 }
 
 type Device struct {
-	ServerTime     int64          `json:"_ts" bson:"_ts,omitempty"`
-	Timestamp      int64          `json:"time" bson:"time,omitempty"`
-	Online         bool           `json:"online" bson:"online,omitempty"`
-	IMEI           int64          `json:"imei" bson:"imei,omitempty"`
-	Charge         uint8          `json:"charge" bson:"charge,omitempty"`             // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
-	Speed          uint8          `json:"speed" bson:"speed,omitempty"`               // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
-	Alt            uint16         `json:"altitude" bson:"altitude,omitempty"`         // tag_5.altitude
-	Azimut         uint16         `json:"azimut" bson:"azimut,omitempty"`             // tag_5.azimut
-	Lat            float32        `json:"lat" bson:"lat,omitempty"`                   // tag_3
-	Lon            float32        `json:"lon" bson:"lon,omitempty"`                   // tag_4
-	IsSim          bool           `json:"isSim" bson:"isSim,omitempty"`               // tag_99 [sim_1st] && [sim_2st] aka self.DeviceStatus["sim_1st"] && self.DeviceStatus["sim_2st"] (binded)
-	SimNumber      uint8          `json:"simNumber" bson:"simNumber,omitempty"`       // tag_99 [sim_t] aka self.DeviceStatus["sim_t"] (binded)
-	MoveSensor     bool           `json:"mover_sensor" bson:"mover_sensor,omitempty"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
-	SatGps         uint8          `json:"sat_gps" bson:"sat_gps,omitempty"`           // tag_5
-	SatGlonass     uint8          `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5
-	GPS            uint8          `json:"gps" bson:"gps,omitempty"`                   // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
-	GSM            uint8          `json:"gsm" bson:"gsm,omitempty"`                   // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
-	LockStatus     bool           `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
-	Charging       bool           `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
-	Mnc            uint32         `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
-	DeviceStatus   map[string]int `json:"device_status" bson:"device_status,omitempty"`
-	VirtualSensors DeviceVS       `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
+	ServerTime      int64          `json:"_ts" bson:"_ts,omitempty"`
+	Timestamp       int64          `json:"time" bson:"time,omitempty"`
+	Online          bool           `json:"online" bson:"online,omitempty"`
+	IMEI            int64          `json:"imei" bson:"imei,omitempty"`
+	Speed           uint8          `json:"speed_kmh" bson:"speed_kmh,omitempty"`       // vs_64 aka self.VirtualSensors.SpeedKMH (binded)
+	Charge          uint8          `json:"charge" bson:"charge,omitempty"`             // vs_64 aka self.VirtualSensors.MainBatteryCharge (binded)
+	SpeedKnots      float64        `json:"speed" bson:"speed,omitempty"`               // tag_5.speed (binded)
+	Alt             int            `json:"altitude" bson:"altitude,omitempty"`         // tag_5.altitude (binded)
+	Azimut          int            `json:"azimut" bson:"azimut,omitempty"`             // tag_5.azimut (binded)
+	Lat             float32        `json:"lat" bson:"lat,omitempty"`                   // tag_3 (binded)
+	Lon             float32        `json:"lon" bson:"lon,omitempty"`                   // tag_4 (binded)
+	IsSim           bool           `json:"isSim" bson:"isSim,omitempty"`               // tag_99 [sim_1st] && [sim_2st] aka self.DeviceStatus["sim_1st"] && self.DeviceStatus["sim_2st"] (binded)
+	SimNumber       uint8          `json:"simNumber" bson:"simNumber,omitempty"`       // tag_99 [sim_t] aka self.DeviceStatus["sim_t"] (binded)
+	MoveSensor      bool           `json:"mover_sensor" bson:"mover_sensor,omitempty"` // tag_99 [mv] aka self.DeviceStatus["mv"] (binded)
+	SatGps          uint8          `json:"sat_gps" bson:"sat_gps,omitempty"`           // tag_5 (binded)
+	SatGlonass      uint8          `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5 (binded)
+	TotalSatellites byte           `json:"sat_glonass" bson:"sat_glonass,omitempty"`   // tag_5 (binded)
+	GPS             uint8          `json:"gps" bson:"gps,omitempty"`                   // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
+	GSM             uint8          `json:"gsm" bson:"gsm,omitempty"`                   // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
+	LockStatus      bool           `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
+	Charging        bool           `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
+	Mnc             uint32         `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
+	DeviceStatus    map[string]int `json:"device_status" bson:"device_status,omitempty"`
+	VirtualSensors  DeviceVS       `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
 }
 
 type Command struct {
@@ -236,13 +238,8 @@ func BindDeviceMainPropertys(device *Device) {
 	}
 }
 
-func ParseTAG5Data(hexValue string) {
+func ParseTAG5Data(hexValue string, device *Device) {
 	data := reverseBytes(hexValue)
-
-	// if len(data) < 5 {
-	// 	fmt.Println("Invalid gps tag_5 data length")
-	// 	return
-	// }
 
 	speedKnots := float64(data[0]) * 1.852
 	gpsSatellites := data[1] & 0x0F
@@ -251,12 +248,55 @@ func ParseTAG5Data(hexValue string) {
 	altitudeMeters := int(data[2]) * 10
 	rate := int(data[3]) * 2
 
-	fmt.Printf("Speed: %.2f km/h\n", speedKnots)
-	fmt.Printf("GPS Satellites: %d\n", gpsSatellites)
-	fmt.Printf("Glonass Satellites: %d\n", glonassSatellites)
-	fmt.Printf("Total Satellites: %d\n", totalSatellites)
-	fmt.Printf("Altitude: %d meters\n", altitudeMeters)
-	fmt.Printf("Rate: %d\n", rate)
+	device.SpeedKnots = speedKnots
+	device.SatGps = gpsSatellites
+	device.SatGlonass = glonassSatellites
+	device.Alt = altitudeMeters
+	device.Azimut = rate
+	device.TotalSatellites = totalSatellites
+	// fmt.Printf("Speed: %. 2f km/h\n", speedKnots)
+	// fmt.Printf("GPS Satellites: %d\n", gpsSatellites)
+	// fmt.Printf("Glonass Satellites: %d\n", glonassSatellites)
+	// fmt.Printf("Total Satellites: %d\n", totalSatellites)
+	// fmt.Printf("Altitude: %d meters\n", altitudeMeters)
+	// fmt.Printf("Rate: %d\n", rate)
+}
+
+func ParseTAG9(hexStr string) {
+	data, err := hex.DecodeString(hexStr)
+	if err != nil || len(data) != 4 {
+		log.Fatalf("Invalid hex string: %s", hexStr)
+	}
+
+	value := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+
+	fmt.Printf("Hex: %s\n", hexStr)
+	fmt.Printf("Binary: %032b\n", value)
+
+	fmt.Printf("IN0: %d\n", (value>>0)&1)
+	fmt.Printf("IN1: %d\n", (value>>1)&1)
+	fmt.Printf("IN2: %d\n", (value>>2)&1)
+	fmt.Printf("IN3: %d\n", (value>>3)&1)
+	fmt.Printf("IN4: %d\n", (value>>4)&1)
+	fmt.Printf("IN5: %d\n", (value>>5)&1)
+	fmt.Printf("IN6: %d\n", (value>>6)&1)
+	fmt.Printf("IN7: %d\n", (value>>7)&1)
+	fmt.Printf("OUT0: %d\n", (value>>8)&1)
+	fmt.Printf("OUT1: %d\n", (value>>9)&1)
+	fmt.Printf("OUT2: %d\n", (value>>10)&1)
+	fmt.Printf("OUT3: %d\n", (value>>11)&1)
+	fmt.Printf("GSM: %d\n", (value>>12)&3)
+	fmt.Printf("GPS/Glonass: %d\n", (value>>14)&3)
+	fmt.Printf("MOVE_SENS: %d\n", (value>>16)&1)
+	fmt.Printf("SIM: %d\n", (value>>17)&1)
+	fmt.Printf("SIM_INSERT: %d\n", (value>>18)&1)
+	fmt.Printf("ST0: %d\n", (value>>19)&1)
+	fmt.Printf("ST1: %d\n", (value>>20)&1)
+	fmt.Printf("ST2: %d\n", (value>>21)&1)
+	fmt.Printf("Bat status: %d\n", (value>>22)&3)
+	voltage := (value >> 24) & 0xFF
+	fmt.Printf("VOLT: %d (mV: %d)\n", voltage, voltage*150)
+
 }
 
 func handleServe(conn net.Conn) {
@@ -462,7 +502,7 @@ func handleServe(conn net.Conn) {
 							}
 							break
 						// device status
-						case 9, 99:
+						case 99:
 							tagParamRv := BytesToHexString(reverseBytes(tagParam))
 							num, _ := strconv.ParseInt(tagParamRv, 16, 64)
 
@@ -484,6 +524,11 @@ func handleServe(conn net.Conn) {
 							}
 
 							break
+
+						case 9:
+							tagParamRv := BytesToHexString(reverseBytes(tagParam))
+							ParseTAG9(tagParamRv)
+							break
 						case 6:
 							break
 						case 3, 4:
@@ -496,7 +541,7 @@ func handleServe(conn net.Conn) {
 							}
 							break
 						case 5:
-							ParseTAG5Data(tagParam)
+							ParseTAG5Data(tagParam, &device)
 							break
 						default:
 							break

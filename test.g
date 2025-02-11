@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"log"
-	"math"
 	"strconv"
 )
 
@@ -120,18 +119,54 @@ func main() {
 	// num := uint32(0x000719)
 
 	// decodeStatus("000b00")
-	fmt.Println(BytesToHexString(reverseBytes("0db35342")))
+	// fmt.Println(BytesToHexString(reverseBytes("0db35342")))
 	// int, err: = strconv.ParseInt("030db35342", 2, 16)
-	rvParamNum, _ := strconv.Atoi(BytesToHexString(reverseBytes("030db35342")))
-	fmt.Println(rvParamNum)
-	v := math.Float32frombits(uint32(hexToDec("4253b30d")))
-	fmt.Println(v)
+	// rvParamNum, _ := strconv.Atoi(BytesToHexString(reverseBytes("030db35342")))
+	// fmt.Println(rvParamNum)
+	// v := math.Float32frombits(uint32(hexToDec("4253b30d")))
 	// newFlags := byte(0x19)
 	// newType := byte((num >> 8) & 0xFF)
 	// fmt.Printf("Флаги состояний: %08b\n", newFlags)
 	// fmt.Printf("Тип устройства: %d\n", newType)
 
 	// fmt.Println(PacketHexChecksum("67A8C24B"))
+	ParseTAG9("F14CB000")
+}
+
+func ParseTAG9(hexStr string) {
+	data, err := hex.DecodeString(hexStr)
+	if err != nil || len(data) != 4 {
+		log.Fatalf("Invalid hex string: %s", hexStr)
+	}
+
+	value := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+
+	fmt.Printf("Hex: %s\n", hexStr)
+	fmt.Printf("Binary: %032b\n", value)
+
+	fmt.Printf("IN0: %d\n", (value>>0)&1)
+	fmt.Printf("IN1: %d\n", (value>>1)&1)
+	fmt.Printf("IN2: %d\n", (value>>2)&1)
+	fmt.Printf("IN3: %d\n", (value>>3)&1)
+	fmt.Printf("IN4: %d\n", (value>>4)&1)
+	fmt.Printf("IN5: %d\n", (value>>5)&1)
+	fmt.Printf("IN6: %d\n", (value>>6)&1)
+	fmt.Printf("IN7: %d\n", (value>>7)&1)
+	fmt.Printf("OUT0: %d\n", (value>>8)&1)
+	fmt.Printf("OUT1: %d\n", (value>>9)&1)
+	fmt.Printf("OUT2: %d\n", (value>>10)&1)
+	fmt.Printf("OUT3: %d\n", (value>>11)&1)
+	fmt.Printf("GSM: %d\n", (value>>12)&3)
+	fmt.Printf("GPS/Glonass: %d\n", (value>>14)&3)
+	fmt.Printf("MOVE_SENS: %d\n", (value>>16)&1)
+	fmt.Printf("SIM: %d\n", (value>>17)&1)
+	fmt.Printf("SIM_INSERT: %d\n", (value>>18)&1)
+	fmt.Printf("ST0: %d\n", (value>>19)&1)
+	fmt.Printf("ST1: %d\n", (value>>20)&1)
+	fmt.Printf("ST2: %d\n", (value>>21)&1)
+	fmt.Printf("Bat status: %d\n", (value>>22)&3)
+	voltage := (value >> 24) & 0xFF
+	fmt.Printf("VOLT: %d (mV: %d)\n", voltage, voltage*150)
 }
 
 func hexToDec(hexString string) int64 {
