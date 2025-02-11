@@ -686,13 +686,13 @@ func handleServe(conn net.Conn) {
 							}
 							break
 
-						case 253, 254, 202, 230:
-							if tagIDDec == 253 || tagIDDec == 202 {
-								processICCID(reverseBytes(tagParam), &device, 1)
-							} else {
-								processICCID(reverseBytes(tagParam), &device, 2)
-							}
-							break
+						// case 253, 254, 202, 230:
+						// 	if tagIDDec == 253 || tagIDDec == 202 {
+						// 		processICCID(reverseBytes(tagParam), &device, 1)
+						// 	} else {
+						// 		processICCID(reverseBytes(tagParam), &device, 2)
+						// 	}
+						// 	break
 						default:
 							break
 						}

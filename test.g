@@ -271,3 +271,6 @@ func decodeStatus(hexStr string) {
 // packet unixtime: ff66a667
 // packet tags data: fbe200000cfd3095cf29fecc002d10caa9d2c829cb048ee20dffcb810600
 // checksum: ef
+
+// tag_190.63 tiger: 3f000719
+// tag_190.63 skt: -
