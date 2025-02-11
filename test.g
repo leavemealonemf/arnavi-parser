@@ -130,7 +130,22 @@ func main() {
 	// fmt.Printf("Тип устройства: %d\n", newType)
 
 	// fmt.Println(PacketHexChecksum("67A8C24B"))
-	ParseTAG9("F14CB000")
+	// ParseTAG9("F14CB000")
+
+	// Исходное значение (32 бита)
+	value := uint32(hexToDec("01010000"))
+
+	if (value>>24)&0xFF != 0x01 {
+		fmt.Println("Неверный режим входа TAG6. Пропускаем обработку.")
+		return
+	}
+
+	ignitionState := (value >> 0) & 0x01    // бит 0 - зажигание
+	doorLock1State := (value >> 8) & 0x01   // бит 8 - замок 1
+	doorLock2State := (value >> 9) & 0x01   // бит 9 - замок 2
+	flashlightState := (value >> 16) & 0x01 // бит 16 - фонарик
+	usbPowerState := (value >> 18) & 0x01   // бит 18 - питание USB порта
+
 }
 
 func ParseTAG9(hexStr string) {
