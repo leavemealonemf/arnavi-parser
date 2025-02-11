@@ -98,8 +98,8 @@ type Device struct {
 	LockStatus      bool              `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
 	Charging        bool              `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	Mnc             uint32            `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
-	DeviceStatus    map[string]int    `json:"ds" bson:"ds,omitempty"`
-	DeviceStatus2   map[string]uint32 `json:"ds2" bson:"ds2,omitempty"`
+	DeviceStatus2   map[string]int    `json:"ds2" bson:"ds2,omitempty"`
+	DeviceStatus1   map[string]uint32 `json:"ds1" bson:"ds1,omitempty"`
 	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
 	VirtualSensors  DeviceVS          `json:"virtual_sensors" bson:"virtual_sensors,omitempty"`
 }
@@ -227,16 +227,16 @@ func AbortTCPDeviceConn(conn *Connection) {
 func BindDeviceMainPropertys(device *Device) {
 	device.Charge = device.VirtualSensors.MainBatteryCharge
 	device.Speed = device.VirtualSensors.SpeedKMH
-	device.MoveSensor = device.DeviceStatus["mw"] == 1
-	device.SimNumber = uint8(device.DeviceStatus["sim_t"])
-	device.GPS = uint8(device.DeviceStatus["nav_st"])
-	device.GSM = uint8(device.DeviceStatus["gsm_st"])
+	device.MoveSensor = device.DeviceStatus2["mw"] == 1
+	device.SimNumber = uint8(device.DeviceStatus2["sim_t"])
+	device.GPS = uint8(device.DeviceStatus2["nav_st"])
+	device.GSM = uint8(device.DeviceStatus2["gsm_st"])
 	device.Charging = device.VirtualSensors.StatementFlags.Charging
-	device.LockStatus = device.DeviceStatus["device_status"] == 2 || device.DeviceStatus["device_status"] == 3
-	if device.DeviceStatus["sim_t"] == 0 {
-		device.IsSim = device.DeviceStatus["sim1_st"] == 1
+	device.LockStatus = device.DeviceStatus2["device_status"] == 2 || device.DeviceStatus2["device_status"] == 3
+	if device.DeviceStatus2["sim_t"] == 0 {
+		device.IsSim = device.DeviceStatus2["sim1_st"] == 1
 	} else {
-		device.IsSim = device.DeviceStatus["sim2_st"] == 1
+		device.IsSim = device.DeviceStatus2["sim2_st"] == 1
 	}
 }
 
@@ -290,7 +290,7 @@ func ParseTAG9(hexStr string, device *Device) {
 	value := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
 	voltage := (value >> 24) & 0xFF
 
-	device.DeviceStatus2 = map[string]uint32{
+	device.DeviceStatus1 = map[string]uint32{
 		"in0":     (value >> 0) & 1,
 		"in1":     (value >> 1) & 1,
 		"in2":     (value >> 2) & 1,
@@ -524,7 +524,7 @@ func handleServe(conn net.Conn) {
 							num, _ := strconv.ParseInt(tagParamRv, 16, 64)
 
 							devicePreResult := map[int]int{}
-							device.DeviceStatus = map[string]int{}
+							device.DeviceStatus2 = map[string]int{}
 
 							for i := 0; i < len(deviceStatusBitPos); i++ {
 								var result int64
@@ -537,7 +537,7 @@ func handleServe(conn net.Conn) {
 
 							for i := 0; i < len(devicePreResult); i++ {
 								assotiation := deviceIdsBytesAssotiation[i]
-								device.DeviceStatus[assotiation] = devicePreResult[i]
+								device.DeviceStatus2[assotiation] = devicePreResult[i]
 							}
 
 							break
