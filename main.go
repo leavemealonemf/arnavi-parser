@@ -832,7 +832,7 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 
 			cs := Checksum(totalBy)
 
-			command := fmt.Sprintf("FB08FF%s%s%s7D", cs, token, cmd)
+			command := fmt.Sprintf("FB08FF%s%s%s7D", strings.ToUpper(cs), strings.ToUpper(token), cmd)
 			fmt.Println(command)
 
 			sComPackage, _ := hex.DecodeString(command)
