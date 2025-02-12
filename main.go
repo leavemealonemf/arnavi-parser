@@ -743,7 +743,7 @@ func handleServe(conn net.Conn) {
 					}
 
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
-					pktType := hexPackageData[start+2 : start+2]
+					pktType := hexPackageData[start : start+2]
 					// pktDatLen := pktBy[offset+2 : 2]
 					// pktTs := pktBy[offset+4 : 4]
 					start += 12
