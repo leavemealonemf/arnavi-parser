@@ -743,13 +743,16 @@ func handleServe(conn net.Conn) {
 					}
 
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
-					pktType := hexPackageData[start+2 : 2]
+					pktType := hexPackageData[start+2 : start+2]
 					// pktDatLen := pktBy[offset+2 : 2]
 					// pktTs := pktBy[offset+4 : 4]
-					start += 10
-					errCode := hexPackageData[start+2 : 2]
-					token := hexPackageData[start+8 : 8]
-					cs := hexPackageData[start+2 : 2]
+					start += 12
+					errCode := hexPackageData[start : start+2]
+					start += 2
+					token := hexPackageData[start : start+8]
+					start += 8
+					cs := hexPackageData[start : start+2]
+					start += 2
 					fmt.Println(pktType, errCode, token, cs)
 
 					continue
