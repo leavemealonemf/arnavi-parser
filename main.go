@@ -11,6 +11,7 @@ import (
 	"math"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +19,7 @@ import (
 	mg "arnaviparser/db/mongo"
 
 	"github.com/gorilla/mux"
+	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -814,9 +816,19 @@ func initIOTCommands() {
 var scooterColl *mongo.Collection
 var ctx = context.TODO()
 
-func main() {
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatalln("No .env file found. Break")
+	}
+}
 
-	mgClient, err := mg.Connect(ctx, "mongodb://grf:starplatinum@localhost:27017")
+func main() {
+	mongUsr, _ := os.LookupEnv("MONGO_USR")
+	mongPass, _ := os.LookupEnv("MONGO_PASSWORD")
+	mongHost, _ := os.LookupEnv("MONGO_HOST")
+	mongPort, _ := os.LookupEnv("MONGO_PORT")
+	connStr := fmt.Sprintf("mongodb://%s:%s@%s:%s", mongUsr, mongPass, mongHost, mongPort)
+	mgClient, err := mg.Connect(ctx, connStr)
 
 	if (err) != nil {
 		log.Fatalln(err.Error())
