@@ -37,6 +37,7 @@ type ReceivedCommand struct {
 	CMD    string
 	Token  string
 	Status string
+	IMEI   string
 }
 
 type HEXHeader struct {
@@ -753,6 +754,17 @@ func handleServe(conn net.Conn) {
 					start += 8
 					cs := hexPackageData[start : start+2]
 					start += 2
+
+					for _, v := range receivedCommands {
+						if strings.Compare(v.Token, token) == 0 {
+							if strings.Compare(errCode, "00") == 0 {
+								v.Status = "completed"
+							} else {
+								v.Status = "error"
+							}
+						}
+					}
+
 					fmt.Println(pktType, errCode, token, cs)
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
@@ -847,6 +859,7 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 				CMD:    command,
 				Token:  token,
 				Status: "pending",
+				IMEI:   imei,
 			})
 
 			c.conn.Write(sComPackage)
