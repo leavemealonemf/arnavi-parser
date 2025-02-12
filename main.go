@@ -14,6 +14,8 @@ import (
 	"strings"
 	"time"
 
+	mg "arnaviparser/db/mongo"
+
 	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -910,6 +912,18 @@ var scooterColl *mongo.Collection
 var ctx = context.TODO()
 
 func main() {
+
+	mgClient, err := mg.Connect(ctx, "mongodb://grf:starplatinum@localhost:27017")
+
+	if (err) != nil {
+		log.Fatalln(err.Error())
+	}
+
+	if mgClient.Ping(ctx, nil) == nil {
+		fmt.Println("ping")
+	}
+
+	mg.Seed(mgClient, ctx)
 
 	serve, err := net.Listen("tcp", ":20550")
 
