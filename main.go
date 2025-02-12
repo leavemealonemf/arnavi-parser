@@ -932,13 +932,16 @@ func main() {
 	// view cmds statuses
 	go func() {
 		for {
-			fmt.Println("COMMANDS STATUS:")
-			for _, v := range receivedCommands {
-				fmt.Println("------------")
-				fmt.Printf("\ncmd: %v\ntoken: %v\nstatus: %v\n\n", v.CMD, v.Token, v.Status)
-				fmt.Println("------------")
+			if len(receivedCommands) > 0 {
+				fmt.Println("COMMANDS STATUS:")
+				for _, v := range receivedCommands {
+					fmt.Println("------------")
+					fmt.Printf("\ncmd: %v\ntoken: %v\nstatus: %v\n\n", v.CMD, v.Token, v.Status)
+					fmt.Println("------------")
+				}
 			}
-			time.Sleep(time.Second * 10)
+
+			time.Sleep(time.Second * 20)
 		}
 	}()
 
