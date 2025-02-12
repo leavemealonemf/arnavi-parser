@@ -34,6 +34,7 @@ func GetAll(ctx context.Context, col *mongo.Collection) {
 	if err = curr.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
+	fmt.Println(results...)
 }
 
 func Insert(ctx context.Context, col *mongo.Collection) {

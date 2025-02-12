@@ -75,7 +75,7 @@ type DeviceVSStatementFlags struct {
 type DeviceVS struct {
 	SpeedKMH                   uint8                  `json:"speed_kmh" bson:"speed_kmh,omitempty"`
 	AverageBatteryCharge       uint8                  `json:"avg_battery_charge" bson:"avg_battery_charge,omitempty"`
-	MainBatteryCharge          uint8                  `json:"main_battery_charge" bson:"main_battery_charge.omitempty"`
+	MainBatteryCharge          uint8                  `json:"main_battery_charge" bson:"main_battery_charge,omitempty"`
 	AdditionalBatteryCharge    uint8                  `json:"additional_battery_charge" bson:"additional_battery_charge,omitempty"`
 	ErrorCode                  uint8                  `json:"err_code" bson:"err_code,omitempty"`
 	MileagePerTrip             uint32                 `json:"mileage_per_trip" bson:"mileage_per_trip,omitempty"`
@@ -752,8 +752,8 @@ func handleServe(conn net.Conn) {
 					start += 8
 					errCode := hexPackageData[start : start+2]
 					start += 2
-					token := "ff" + hexPackageData[start:start+8]
-					start += 8
+					token := "ff" + hexPackageData[start:start+6]
+					start += 6
 					cs := hexPackageData[start : start+2]
 					start += 2
 
@@ -910,14 +910,6 @@ var scooterColl *mongo.Collection
 var ctx = context.TODO()
 
 func main() {
-
-	// mgClient, err := mg.Connect(ctx, "mongodb://localhost:27017")
-
-	// if (err) != nil {
-	// 	log.Fatalln(err.Error())
-	// }
-
-	// scooterColl = mgClient.Database("iot").Collection("scooters")
 
 	serve, err := net.Listen("tcp", ":20550")
 
