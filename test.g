@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -172,26 +173,47 @@ func main() {
 	// externalVoltage := uint16(data[0])<<8 | uint16(data[1])
 	// internalVoltage := uint16(data[2])<<8 | uint16(data[3])
 
-	hexString := "fde2e12c16fecc6a9105"
+	// // Декодируем строку в байты
+	// data, err := hex.DecodeString(hexString)
+	// if err != nil || len(data) != 10 {
+	// 	fmt.Println("Ошибка декодирования данных")
+	// 	return
+	// }
 
-	// Декодируем строку в байты
-	data, err := hex.DecodeString(hexString)
-	if err != nil || len(data) != 10 {
-		fmt.Println("Ошибка декодирования данных")
-		return
+	// // Разбираем первые 5 байтов (iccid1p1)
+	// iccid1p1 := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
+	// iccid1p1 = (iccid1p1 << 8) | uint32(data[4]) // Добавляем последний байт
+
+	// // Разбираем следующие 5 байтов (iccid1p2)
+	// iccid1p2 := uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
+	// iccid1p2 = (iccid1p2 << 8) | uint32(data[9]) // Добавляем последний байт
+
+	// // Вывод результата в формате ICCID1=89xxxxxxxxx xxxxxxxxx
+	// fmt.Printf("ICCID1=89%09d%09d\n", iccid1p1, iccid1p2)
+	// receivedPackets := make([]map[string]map[string]interface{}, 0)
+	// dec, _ := hex.DecodeString("FF314E5651330300")
+	// Checksum(dec)
+	fmt.Println(GenerateСmdTokenHex32())
+}
+
+func GenerateСmdTokenHex32() string {
+	bytes := make([]byte, 4)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		//
+	}
+	bytes[0] = 0xFF
+	return hex.EncodeToString(bytes)
+}
+
+func Checksum(bs []byte) {
+	checksum := byte(0)
+	for _, b := range bs {
+		checksum += b
 	}
 
-	// Разбираем первые 5 байтов (iccid1p1)
-	iccid1p1 := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-	iccid1p1 = (iccid1p1 << 8) | uint32(data[4]) // Добавляем последний байт
-
-	// Разбираем следующие 5 байтов (iccid1p2)
-	iccid1p2 := uint32(data[5])<<24 | uint32(data[6])<<16 | uint32(data[7])<<8 | uint32(data[8])
-	iccid1p2 = (iccid1p2 << 8) | uint32(data[9]) // Добавляем последний байт
-
-	// Вывод результата в формате ICCID1=89xxxxxxxxx xxxxxxxxx
-	fmt.Printf("ICCID1=89%09d%09d\n", iccid1p1, iccid1p2)
-
+	fmt.Sprintf("%02x", checksum)
+	fmt.Printf("%X", checksum)
 }
 
 func ParseTAG9(hexStr string) {
@@ -264,6 +286,7 @@ func decodeStatus(hexStr string) {
 	fmt.Printf("Pedestrian Mode: %v\n", pedestrianMode)
 	fmt.Printf("Overheat: %v\n", overheat)
 	fmt.Printf("Scooter Type: %d\n", byte1)
+
 }
 
 // type of content: 01
@@ -272,5 +295,5 @@ func decodeStatus(hexStr string) {
 // packet tags data: fbe200000cfd3095cf29fecc002d10caa9d2c829cb048ee20dffcb810600
 // checksum: ef
 
-// tag_190.63 tiger: 3f000719
-// tag_190.63 skt: -
+// tag_190.63 tiger: 000719
+// tag_190.63 skt: - 000719

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -25,10 +26,17 @@ var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
+var receivedCommands []*Command
 
 type Connection struct {
 	conn   net.Conn
 	device *Device
+}
+
+type ReceivedCommand struct {
+	CMD    string
+	Token  string
+	Status string
 }
 
 type HEXHeader struct {
@@ -133,7 +141,13 @@ type Device struct {
 }
 
 type Command struct {
-	Val string
+	Val         string
+	Status      string
+	Subscribers []interface{}
+}
+
+func (cmd *Command) AddSubscriber(subscriber interface{}) {
+	cmd.Subscribers = append(cmd.Subscribers, subscriber)
 }
 
 func BytesToHexString(bytes []byte) string {
@@ -184,6 +198,25 @@ func PacketHexChecksum(hexPacket *HEXPacket) string {
 	}
 
 	return fmt.Sprintf("%02x", checksum)
+}
+
+func Checksum(val []byte) string {
+	checksum := byte(0)
+	for _, b := range val {
+		checksum += b
+	}
+
+	return hex.EncodeToString([]byte{checksum})
+}
+
+func GenСmdTokenHex() (string, error) {
+	bytes := make([]byte, 4)
+	_, err := rand.Read(bytes)
+	if err != nil {
+		return "", fmt.Errorf("GenСmdTokenHex err: %v\n", err.Error())
+	}
+	bytes[0] = 0xFF
+	return hex.EncodeToString(bytes), nil
 }
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
@@ -710,7 +743,7 @@ func handleServe(conn net.Conn) {
 					}
 
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
-					// sendServerComSuccessed("512", conn)
+
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
 					break
@@ -789,7 +822,19 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 		c := connections[int64(decImei)]
 
 		if c != nil {
-			sComPackage, _ := hex.DecodeString(cmd)
+			token, _ := GenСmdTokenHex()
+			tokenBy := HexToBytes(token)
+			cmdBy := HexToBytes(cmd)
+
+			totalBy := make([]byte, 2)
+			totalBy = append(totalBy, tokenBy...)
+			totalBy = append(totalBy, cmdBy...)
+
+			cs := Checksum(totalBy)
+
+			command := fmt.Sprintf("FB08FF%s%s%s7D", cs, token, cmd)
+
+			sComPackage, _ := hex.DecodeString(command)
 			c.conn.Write(sComPackage)
 		}
 
