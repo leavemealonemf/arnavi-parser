@@ -867,7 +867,9 @@ func bootHTTP() {
 	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
 	http.Handle("/", r)
-	http.ListenAndServe(":8080", nil)
+	if http.ListenAndServe(":8080", nil) != nil {
+		fmt.Println("Served HTTP on :8080")
+	}
 }
 
 func initIOTCommands() {
@@ -927,8 +929,6 @@ func main() {
 
 	log.Println("Server started:", serve.Addr().Network())
 
-	go bootHTTP()
-
 	// view cmds statuses
 	go func() {
 		for {
@@ -941,6 +941,8 @@ func main() {
 			time.Sleep(time.Second * 10)
 		}
 	}()
+
+	go bootHTTP()
 
 	for {
 		conn, err := serve.Accept()
