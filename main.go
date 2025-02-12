@@ -794,6 +794,12 @@ func handleServe(conn net.Conn) {
 			device.Online = true
 			marshal, _ := json.Marshal(device)
 			fmt.Println(string(marshal))
+			_, e := scooterColl.InsertOne(ctx, device)
+			if e != nil {
+				fmt.Println("Insert scooter error")
+			} else {
+				fmt.Println("Insert scooter successfully")
+			}
 		}
 	}
 }
@@ -924,6 +930,8 @@ func main() {
 	}
 
 	mg.Seed(mgClient, ctx)
+
+	scooterColl = mgClient.Database("iot").Collection("scooters")
 
 	serve, err := net.Listen("tcp", ":20550")
 
