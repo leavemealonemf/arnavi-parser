@@ -867,9 +867,8 @@ func bootHTTP() {
 	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
 	http.Handle("/", r)
-	if http.ListenAndServe(":8080", nil) != nil {
-		fmt.Println("Served HTTP on :8080")
-	}
+	fmt.Println("Served HTTP on :8080")
+	http.ListenAndServe(":8080", nil)
 }
 
 func initIOTCommands() {
