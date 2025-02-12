@@ -743,6 +743,21 @@ func handleServe(conn net.Conn) {
 					}
 
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "09" {
+					offset := 2
+					pktBy, _ := hex.DecodeString(hexPackageData)
+					pktType := pktBy[offset+1 : 1]
+					// pktDatLen := pktBy[offset+2 : 2]
+					// pktTs := pktBy[offset+4 : 4]
+					offset += 5
+					errCode := pktBy[offset+1 : 1]
+					token := pktBy[offset+4 : 4]
+					cs := pktBy[offset:1]
+					fmt.Println(
+						BytesToHexString(pktType),
+						BytesToHexString(token),
+						BytesToHexString(errCode),
+						BytesToHexString(cs),
+					)
 
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
