@@ -747,7 +747,7 @@ func handleServe(conn net.Conn) {
 					pktType := hexPackageData[start : start+2]
 					// pktDatLen := pktBy[offset+2 : 2]
 					// pktTs := pktBy[offset+4 : 4]
-					start += 16
+					start += 12
 					errCode := hexPackageData[start : start+2]
 					start += 2
 					token := "ff" + hexPackageData[start:start+8]
