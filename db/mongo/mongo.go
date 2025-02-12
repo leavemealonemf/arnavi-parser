@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -37,6 +38,21 @@ func GetAll(ctx context.Context, col *mongo.Collection) {
 	fmt.Println(results...)
 }
 
-func Insert(ctx context.Context, col *mongo.Collection) {
-	// col.InsertOne(ctx, )
+func Insert(ctx context.Context, col *mongo.Collection, data interface{}) {
+	_, err := col.InsertOne(ctx, data)
+	if err != nil {
+		fmt.Println("[MONGO] Insert entity err:", err.Error())
+	}
+}
+
+func FindAll(ctx context.Context, col *mongo.Collection) *mongo.Cursor {
+	f := bson.D{}
+	curr, err := col.Find(ctx, f)
+
+	if err != nil {
+		fmt.Println("[MONGO] Find all err:", err.Error())
+		return nil
+	}
+
+	return curr
 }
