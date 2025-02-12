@@ -750,7 +750,7 @@ func handleServe(conn net.Conn) {
 					start += 16
 					errCode := hexPackageData[start : start+2]
 					start += 2
-					token := hexPackageData[start : start+8]
+					token := "ff" + hexPackageData[start:start+8]
 					start += 8
 					cs := hexPackageData[start : start+2]
 					start += 2
