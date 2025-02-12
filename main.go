@@ -754,7 +754,7 @@ func handleServe(conn net.Conn) {
 					cs := hexPackageData[start : start+2]
 					start += 2
 					fmt.Println(pktType, errCode, token, cs)
-
+					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
 					break
 				} else {
