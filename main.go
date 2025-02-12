@@ -26,7 +26,7 @@ var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
-var receivedCommands []*Command
+var receivedCommands []*ReceivedCommand
 
 type Connection struct {
 	conn   net.Conn
@@ -815,8 +815,6 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		imei := vars["imei"]
 		cmd := vars["cmd"]
-		fmt.Println(cmd)
-		fmt.Println([]byte(cmd))
 		decImei, _ := strconv.Atoi(imei)
 
 		c := connections[int64(decImei)]
@@ -832,10 +830,15 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 
 			cs := Checksum(totalBy)
 
-			command := fmt.Sprintf("7B08FF%s%s%s7D", strings.ToUpper(cs), strings.ToUpper(token), cmd)
-			fmt.Println(command)
-
+			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
 			sComPackage, _ := hex.DecodeString(command)
+
+			receivedCommands = append(receivedCommands, &ReceivedCommand{
+				CMD:    command,
+				Token:  token,
+				Status: "pending",
+			})
+
 			c.conn.Write(sComPackage)
 		}
 
@@ -910,6 +913,19 @@ func main() {
 	log.Println("Server started:", serve.Addr().Network())
 
 	go bootHTTP()
+
+	// view cmds statuses
+	go func() {
+		for {
+			fmt.Println("COMMANDS STATUS:")
+			for _, v := range receivedCommands {
+				fmt.Println("------------")
+				fmt.Printf("\ncmd: %v\ntoken: %v\nstatus: %v\n\n", v.CMD, v.Token, v.Status)
+				fmt.Println("------------")
+			}
+			time.Sleep(time.Second * 10)
+		}
+	}()
 
 	for {
 		conn, err := serve.Accept()
