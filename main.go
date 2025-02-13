@@ -710,6 +710,13 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
 			sComPackage, _ := hex.DecodeString(command)
 
+			cmdInfo := commands[cmd]
+
+			if cmdInfo == nil {
+				fmt.Fprintf(w, "this command does not exist %v", cmd)
+				return
+			}
+
 			recievedCmd := &ReceivedCommand{
 				ServerTime: time.Now().UnixMicro(),
 				CMD:        command,
