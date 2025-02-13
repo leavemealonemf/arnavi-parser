@@ -120,7 +120,7 @@ type Device struct {
 	Mnc             uint32            `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
 	DeviceStatus2   map[string]int    `json:"tag_99" bson:"tag_99,omitempty"`
 	DeviceStatus1   map[string]uint32 `json:"tag_9" bson:"tag_9,omitempty"`
-	TagSix          map[string]uint32 `json:"tag_6" bson:"tag_6,omitempty"`
+	TagSix          map[string]bool   `json:"tag_6" bson:"tag_6,omitempty"`
 	TagFive         TAGFive           `json:"tag_5" bson:"tag_5,omitempty"`
 	TAGOne          TAGOne            `json:"tag_1" bson:"tag_1,omitempty"`
 	SimOne          *SimStatus        `json:"sim_1" bson:"sim_1,omitempty"`

@@ -286,23 +286,33 @@ func ParseTAG5Data(hexValue string, device *Device) {
 }
 
 func ParseTAG6(hexString string, device *Device) {
-	num := hexToDec(hexString)
 
-	value := uint32((num >> 8) & 0xFFFF) // Берем только байты 2 и 3
+	num, _ := strconv.ParseUint(hexString, 16, 32)
+
+	value := (num >> 8) & 0xFFFF // Берем только байты 2 и 3
+	fmt.Printf("Анализируемое значение (байты 2 и 3): %016b\n", value)
 
 	// Проверяем состояние битов
-	ignitionState := value & (1 << 0)    // Бит 0 - зажигание
-	doorLock1State := value & (1 << 8)   // Бит 8 - состояние замка 1
-	doorLock2State := value & (1 << 9)   // Бит 9 - состояние замка 2
-	flashlightState := value & (1 << 16) // Бит 16 - фонарик
-	usbPowerState := value & (1 << 18)   // Бит 18 - питание USB-порта
+	ignition := value&(1<<0) != 0      // Бит 0 - зажигание
+	lock1 := value&(1<<8) != 0         // Бит 8 - состояние замка 1
+	lock2 := value&(1<<9) != 0         // Бит 9 - состояние замка 2
+	flashlight := (num>>(8+16))&1 != 0 // Бит 16 - фонарик
+	usbPower := (num>>(8+18))&1 != 0   // Бит 18 - питание USB-порта
 
-	device.TagSix = map[string]uint32{
-		"ignition_st":      ignitionState,
-		"door_one_lock_st": doorLock1State,
-		"door_two_lock_st": doorLock2State,
-		"flash_light_st":   flashlightState,
-		"usb_pwr_st":       usbPowerState,
+	// Выводим результаты анализа
+	fmt.Println("Результат разбора:")
+	fmt.Printf("Зажигание: %v\n", ignition)
+	fmt.Printf("Замок 1 (Lock 1): %v\n", lock1)
+	fmt.Printf("Замок 2 (Lock 2): %v\n", lock2)
+	fmt.Printf("Фонарик (Flashlight): %v\n", flashlight)
+	fmt.Printf("Питание USB-порта: %v\n", usbPower)
+
+	device.TagSix = map[string]bool{
+		"ignition_st":      ignition,
+		"door_one_lock_st": lock1,
+		"door_two_lock_st": lock2,
+		"flash_light_st":   flashlight,
+		"usb_pwr_st":       usbPower,
 	}
 }
 
