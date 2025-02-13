@@ -285,8 +285,39 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	device.TotalSatellites = totalSatellites
 }
 
+func reverseHexToUint32(hexStr string) (uint32, error) {
+	// Убираем префикс "0x", если он есть
+	if len(hexStr) > 2 && (hexStr[:2] == "0x" || hexStr[:2] == "0X") {
+		hexStr = hexStr[2:]
+	}
+
+	// Проверяем, что длина строки кратна 2
+	if len(hexStr)%2 != 0 {
+		return 0, fmt.Errorf("некорректная hex-строка, длина должна быть кратна 2")
+	}
+
+	// Декодируем hex-строку в массив байтов
+	bytes, err := hex.DecodeString(hexStr)
+	if err != nil {
+		return 0, fmt.Errorf("ошибка декодирования hex-строки: %v", err)
+	}
+
+	// Разворачиваем порядок байтов
+	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
+		bytes[i], bytes[j] = bytes[j], bytes[i]
+	}
+
+	// Преобразуем байты в uint32 (учитываем, что у нас максимум 4 байта)
+	var result uint32
+	for i := 0; i < len(bytes); i++ {
+		result |= uint32(bytes[i]) << (8 * i)
+	}
+
+	return result, nil
+}
+
 func ParseTAG6(hexString string, device *Device) {
-	num := hexToDec(BytesToHexString(reverseBytes(hexString)))
+	num, _ := reverseHexToUint32(hexString)
 
 	mode := byte(num & 0xFF)
 	if mode != 0x01 {
