@@ -892,7 +892,7 @@ func bootHTTP() {
 	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
 	r.HandleFunc("/iot/scooters/{imei}/latest", HTTPIotLatestOneScooterData)
 	r.HandleFunc("/iot/scooters/{imei}/latest/journal", HTTPIotLatestOneScooterDataWithCmdsJournal)
-	r.HandleFunc("/iot/scooters/{imei}/cmds-journal", HTTPIotOneScooterCmdsJournal)
+	r.HandleFunc("/iot/scooters/{imei}/cjournal", HTTPIotOneScooterCmdsJournal)
 	http.Handle("/", r)
 	fmt.Println("Served HTTP on :8080")
 	http.ListenAndServe(":8080", nil)
