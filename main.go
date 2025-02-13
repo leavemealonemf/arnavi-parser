@@ -932,8 +932,25 @@ func WSMessageHandler(msg []byte) {
 	fmt.Println(string(msg))
 }
 
+func secureMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		k, _ := os.LookupEnv("ACCESS_KEY")
+
+		authH := r.Header.Get("Authorization")
+
+		if len(authH) == 0 || strings.Compare(k, authH) != 0 {
+			w.WriteHeader(403)
+			fmt.Fprintf(w, "Unauthorized")
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func bootHTTP() {
 	r := mux.NewRouter()
+	// r.Use(secureMiddleware)
 	r.HandleFunc("/iot/ws", PullToWS)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
 	r.HandleFunc("/iot/scooters", HTTPIotDataScooters)
@@ -943,6 +960,7 @@ func bootHTTP() {
 	r.HandleFunc("/iot/scooters/{imei}/cjournal", HTTPIotOneScooterCmdsJournal)
 	http.Handle("/", r)
 	fmt.Println("Served HTTP on :8080")
+
 	http.ListenAndServe(":8080", nil)
 }
 
