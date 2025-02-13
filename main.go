@@ -19,6 +19,7 @@ import (
 	mg "arnaviparser/db/mongo"
 
 	"github.com/gorilla/mux"
+	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -34,6 +35,7 @@ var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
 var receivedCommands []*ReceivedCommand
 var addedImeis []int64
+var wsConnections []*websocket.Conn
 
 func BytesToHexString(bytes []byte) string {
 	encoded := hex.EncodeToString(bytes)
@@ -668,6 +670,9 @@ func handleServe(conn net.Conn) {
 			device.Online = true
 			marshal, _ := json.Marshal(device)
 			fmt.Println(string(marshal))
+			for _, v := range wsConnections {
+				v.WriteJSON(device)
+			}
 			_, e := scooterColl.InsertOne(ctx, device)
 			if e != nil {
 				fmt.Println("Insert scooter error")
@@ -885,8 +890,44 @@ func HTTPIotOneScooterCmdsJournal(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+var upgrader = websocket.Upgrader{
+	CheckOrigin: func(r *http.Request) bool {
+		return true
+	},
+}
+
+func PullToWS(w http.ResponseWriter, r *http.Request) {
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		fmt.Println("Connect to WS err:", err.Error())
+		return
+	}
+
+	wsConnections = append(wsConnections, conn)
+
+	// for {
+	// 	_, _, err := conn.ReadMessage()
+	// 	if err != nil {
+	// 		fmt.Println("[WS] Read message error. Exit", err.Error())
+	// 		break
+	// 	}
+
+	// 	m := []byte("hello from iot king")
+
+	// 	conn.WriteMessage(websocket.TextMessage, m)
+	// 	go WSMessageHandler(m)
+	// }
+
+	defer conn.Close()
+}
+
+func WSMessageHandler(msg []byte) {
+	fmt.Println(string(msg))
+}
+
 func bootHTTP() {
 	r := mux.NewRouter()
+	r.HandleFunc("/iot/ws", PullToWS)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
 	r.HandleFunc("/iot/scooters", HTTPIotDataScooters)
 	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
