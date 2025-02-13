@@ -1001,6 +1001,16 @@ func initIOTCommands() {
 		NameEn: "Set Drive Mode S",
 		NameRu: "Установить стиль езды S",
 	}
+	commands["51330302"] = &Command{
+		Val:    "51080201",
+		NameEn: "Turn On Flash",
+		NameRu: "Включить фонарь",
+	}
+	commands["51330302"] = &Command{
+		Val:    "51080200",
+		NameEn: "Turn Off Flash",
+		NameRu: "Выключить фонарь",
+	}
 }
 
 var scooterColl *mongo.Collection
