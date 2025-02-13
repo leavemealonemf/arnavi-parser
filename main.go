@@ -4,7 +4,6 @@ import (
 	. "arnaviparser/structs"
 	"context"
 	"crypto/rand"
-	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -286,46 +285,26 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	device.TotalSatellites = totalSatellites
 }
 
-func reverseHexToUint32(hexString string) (uint32, error) {
-	// Переворачиваем строку (каждый байт в обратном порядке)
-	bytes := []byte{}
-	for i := len(hexString) - 2; i >= 0; i -= 2 {
-		b, err := hex.DecodeString(hexString[i : i+2])
-		if err != nil {
-			return 0, err
-		}
-		bytes = append(bytes, b...)
-	}
-	// Преобразуем в uint32
-	return binary.LittleEndian.Uint32(bytes), nil
-}
-
 func ParseTAG6(hexString string, device *Device) {
-	num, _ := reverseHexToUint32(hexString)
+	value := uint32(hexToDec(hexString))
 
-	// Извлекаем режим (первый байт)
-	mode := byte(num & 0xFF)
-	if mode != 0x01 {
+	if (value>>24)&0xFF != 0x01 {
+		fmt.Println("Неверный режим входа TAG6. Пропускаем обработку.")
 		return
 	}
 
-	// Извлекаем следующие байты для состояния
-	value := (num >> 8) & 0xFFFF
-	fmt.Printf("Анализируемое значение (байты 2 и 3): %016b\n", value)
+	ignitionState := (value >> 0) & 0x01    // бит 0 - зажигание
+	doorLock1State := (value >> 8) & 0x01   // бит 8 - замок 1
+	doorLock2State := (value >> 9) & 0x01   // бит 9 - замок 2
+	flashlightState := (value >> 16) & 0x01 // бит 16 - фонарик
+	usbPowerState := (value >> 18) & 0x01   // бит 18 - питание USB порта
 
-	// Извлекаем биты
-	ignition := (value & (1 << 0)) != 0    // Проверка бита 0 (зажигание)
-	lock1 := (value & (1 << 8)) != 0       // Проверка бита 8 (замок 1)
-	lock2 := (value & (1 << 9)) != 0       // Проверка бита 9 (замок 2)
-	flashlight := (value & (1 << 16)) != 0 // Проверка бита 16 (фонарик)
-	usbPower := (value & (1 << 18)) != 0   // Проверка бита 18 (питание USB)
-
-	device.TagSix = map[string]bool{
-		"ignition_st":      ignition,
-		"door_one_lock_st": lock1,
-		"door_two_lock_st": lock2,
-		"flash_light_st":   flashlight,
-		"usb_pwr_st":       usbPower,
+	device.TagSix = map[string]uint32{
+		"ignition_st":      ignitionState,
+		"door_one_lock_st": doorLock1State,
+		"door_two_lock_st": doorLock2State,
+		"flash_light_st":   flashlightState,
+		"usb_pwr_st":       usbPowerState,
 	}
 }
 
