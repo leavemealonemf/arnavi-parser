@@ -8,12 +8,13 @@ type Connection struct {
 }
 
 type ReceivedCommand struct {
-	ServerTime int64    `json:"_ts" bson:"_ts,omitempty"`
-	CMD        string   `json:"hex_origin" bson:"hex_origin,omitempty"`
-	Token      string   `json:"token" bson:"token,omitempty"`
-	Status     string   `json:"status" bson:"status,omitempty"`
-	IMEI       string   `json:"dvce_imei" bson:"dvce_imei,omitempty"`
-	CMDInfo    *Command `json:"cmd_info" bson:"cmd_info,omitempty"`
+	ServerTime    int64    `json:"_ts" bson:"_ts"`
+	CompletedTime int64    `json:"_ct" bson:"_ct"`
+	CMD           string   `json:"hex_origin" bson:"hex_origin,omitempty"`
+	Token         string   `json:"token" bson:"token,omitempty"`
+	Status        string   `json:"status" bson:"status,omitempty"`
+	IMEI          string   `json:"dvce_imei" bson:"dvce_imei,omitempty"`
+	CMDInfo       *Command `json:"cmd_info" bson:"cmd_info"`
 }
 
 type HEXHeader struct {

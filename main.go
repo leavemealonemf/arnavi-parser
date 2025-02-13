@@ -636,6 +636,7 @@ func handleServe(conn net.Conn) {
 							upd := bson.D{
 								{"$set", bson.D{
 									{Key: "status", Value: v.Status},
+									{Key: "_ct", Value: time.Now().UnixMicro()},
 								}},
 							}
 							mg.UpdOne(ctx, cmdsColl, f, upd)
@@ -661,8 +662,7 @@ func handleServe(conn net.Conn) {
 			// 	break
 			// }
 
-			timeNow := time.Now()
-			device.ServerTime = timeNow.UnixNano()
+			device.ServerTime = time.Now().UnixMicro()
 			BindDeviceMainPropertys(&device)
 			device.Online = true
 			marshal, _ := json.Marshal(device)
