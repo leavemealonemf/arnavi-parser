@@ -69,3 +69,13 @@ func FindAllWithOpts(ctx context.Context, col *mongo.Collection, f interface{}, 
 	}
 	return curr
 }
+
+func UpdOne(ctx context.Context, col *mongo.Collection, f interface{}, upd interface{}) *mongo.UpdateResult {
+	result, err := col.UpdateOne(ctx, f, upd)
+	if err != nil {
+		fmt.Println("[MONGO] Update err:", err.Error())
+		return nil
+	}
+
+	return result
+}

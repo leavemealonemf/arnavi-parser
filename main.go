@@ -439,28 +439,8 @@ func handleServe(conn net.Conn) {
 				break
 			}
 
-			// hexPackage := &HEXPackage{
-			// 	StartSign: hexPackageData[0:2],
-			// 	ParcelNum: hexPackageData[2:4],
-			// }
-
-			// hexPacket := &HEXPacket{
-			// 	TypeOfContent: hexPackageData[4:6],
-			// 	PacketDataLen: hexPackageData[6:8],
-			// 	Unixtime:      hexPackageData[8:16],
-			// }
-
-			// if !isCmdSended {
-			// 	sendTestCMD(conn)
-			// 	isCmdSended = true
-			// 	continue
-			// }
-
 			var start int64 = 4
 			isBrokePackage := false
-
-			// fmt.Printf("FULL PACKAGE: %v\n\n", hexPackageData)
-			// fmt.Println("----- PACKETS ------")
 
 			for {
 				hexPacket := &HEXPacket{
@@ -482,7 +462,6 @@ func handleServe(conn net.Conn) {
 					hexPacket.Checksum = hexPackageData[start+dataLenBytes : start+dataLenBytes+2]
 
 					packetChecksum := PacketHexChecksum(hexPacket)
-					// fmt.Println("packet checksum:", packetChecksum)
 
 					if strings.ToLower(packetChecksum) != hexPacket.Checksum {
 						fmt.Println("Wrong packet checksum. Break...")
@@ -641,12 +620,25 @@ func handleServe(conn net.Conn) {
 					start += 2
 
 					for _, v := range receivedCommands {
+						if v.Status == "completed" || v.Status == "error" {
+							continue
+						}
+
 						if strings.Compare(v.Token, token) == 0 {
 							if strings.Compare(errCode, "00") == 0 {
 								v.Status = "completed"
 							} else {
 								v.Status = "error"
 							}
+
+							f := bson.D{{Key: "token", Value: token}}
+
+							upd := bson.D{
+								{"$set", bson.D{
+									{Key: "status", Value: v.Status},
+								}},
+							}
+							mg.UpdOne(ctx, cmdsColl, f, upd)
 						}
 					}
 
@@ -746,12 +738,17 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
 			sComPackage, _ := hex.DecodeString(command)
 
-			receivedCommands = append(receivedCommands, &ReceivedCommand{
-				CMD:    command,
-				Token:  token,
-				Status: "pending",
-				IMEI:   imei,
-			})
+			recievedCmd := &ReceivedCommand{
+				ServerTime: time.Now().UnixMicro(),
+				CMD:        command,
+				Token:      token,
+				Status:     "pending",
+				IMEI:       imei,
+				CMDInfo:    commands[cmd],
+			}
+
+			receivedCommands = append(receivedCommands, recievedCmd)
+			mg.Insert(ctx, cmdsColl, recievedCmd)
 
 			c.Conn.Write(sComPackage)
 		}
@@ -855,26 +852,40 @@ func bootHTTP() {
 
 func initIOTCommands() {
 	commands := map[string]*Command{}
-	commands["set_block_motor_wheel"] = &Command{
-		Val: "7B08FF58FF314E55513300017D",
+	commands["51330001"] = &Command{
+		Val:    "51330001",
+		NameEn: "Block Scooter Motor Wheel",
+		NameRu: "Блокировка мотор колеса",
 	}
-	commands["unset_block_motor_wheel_and_guard_mode"] = &Command{
-		Val: "7B08FF57FF314E55513300007D",
+	commands["51330000"] = &Command{
+		Val:    "51330000",
+		NameEn: "Disable Guard Mode",
+		NameRu: "Снять с режима охраны",
 	}
-	commands["set_guard_mode"] = &Command{
-		Val: "7B08FF5CFF314E55513300057D",
+	commands["51330005"] = &Command{
+		Val:    "51330005",
+		NameEn: "Enable Guard Mode",
+		NameRu: "Установить режим охраны",
 	}
-	commands["set_service_mode"] = &Command{
-		Val: "7B08FF5DFF314E55513300067D",
+	commands["51330006"] = &Command{
+		Val:    "51330006",
+		NameEn: "Set Service Mode",
+		NameRu: "Установить режим сервиса",
 	}
-	commands["set_d_drive_mode"] = &Command{
-		Val: "7B08FF5AFF314E55513303007D",
+	commands["51330300"] = &Command{
+		Val:    "51330300",
+		NameEn: "Set Drive Mode D",
+		NameRu: "Установить стиль езды D",
 	}
-	commands["set_eco_drive_mode"] = &Command{
-		Val: "7B08FF5BFF314E55513303017D",
+	commands["51330301"] = &Command{
+		Val:    "51330301",
+		NameEn: "Set Drive Mode ECO",
+		NameRu: "Установить стиль езды ECO",
 	}
-	commands["set_s_drive_mode"] = &Command{
-		Val: "7B08FF5CFF314E55513303027D",
+	commands["51330302"] = &Command{
+		Val:    "51330302",
+		NameEn: "Set Drive Mode S",
+		NameRu: "Установить стиль езды S",
 	}
 }
 

@@ -8,10 +8,12 @@ type Connection struct {
 }
 
 type ReceivedCommand struct {
-	CMD    string
-	Token  string
-	Status string
-	IMEI   string
+	ServerTime int64    `json:"_ts" bson:"_ts,omitempty"`
+	CMD        string   `json:"hex_origin" bson:"hex_origin,omitempty"`
+	Token      string   `json:"token" bson:"token,omitempty"`
+	Status     string   `json:"status" bson:"status,omitempty"`
+	IMEI       string   `json:"dvce_imei" bson:"dvce_imei,omitempty"`
+	CMDInfo    *Command `json:"cmd_info" bson:"cmd_info,omitempty"`
 }
 
 type HEXHeader struct {
@@ -116,11 +118,7 @@ type Device struct {
 }
 
 type Command struct {
-	Val         string
-	Status      string
-	Subscribers []interface{}
-}
-
-func (cmd *Command) AddSubscriber(subscriber interface{}) {
-	cmd.Subscribers = append(cmd.Subscribers, subscriber)
+	Val    string `json:"cmd_hex" bson:"cmd_hex,omitempty"`
+	NameEn string `json:"name_en" bson:"name_en,omitempty"`
+	NameRu string `json:"name_ru" bson:"name_ru,omitempty"`
 }
