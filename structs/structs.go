@@ -7,10 +7,15 @@ type Connection struct {
 	Device *Device
 }
 
-type IOTResponse struct {
+type IOTResponseJournal struct {
 	ID         int64             `json:"id" bson:"id"`
 	State      *Device           `json:"state" bson:"state"`
 	CMDJournal []ReceivedCommand `json:"cmd_journal" bson:"cmd_journal"`
+}
+
+type IOTResponse struct {
+	ID    int64   `json:"id" bson:"id"`
+	State *Device `json:"state" bson:"state"`
 }
 
 type ReceivedCommand struct {
