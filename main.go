@@ -4,6 +4,7 @@ import (
 	. "arnaviparser/structs"
 	"context"
 	"crypto/rand"
+	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -285,53 +286,39 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	device.TotalSatellites = totalSatellites
 }
 
-func reverseHexToUint32(hexStr string) (uint32, error) {
-	// Убираем префикс "0x", если он есть
-	if len(hexStr) > 2 && (hexStr[:2] == "0x" || hexStr[:2] == "0X") {
-		hexStr = hexStr[2:]
+func reverseHexToUint32(hexString string) (uint32, error) {
+	// Переворачиваем строку (каждый байт в обратном порядке)
+	bytes := []byte{}
+	for i := len(hexString) - 2; i >= 0; i -= 2 {
+		b, err := hex.DecodeString(hexString[i : i+2])
+		if err != nil {
+			return 0, err
+		}
+		bytes = append(bytes, b...)
 	}
-
-	// Проверяем, что длина строки кратна 2
-	if len(hexStr)%2 != 0 {
-		return 0, fmt.Errorf("некорректная hex-строка, длина должна быть кратна 2")
-	}
-
-	// Декодируем hex-строку в массив байтов
-	bytes, err := hex.DecodeString(hexStr)
-	if err != nil {
-		return 0, fmt.Errorf("ошибка декодирования hex-строки: %v", err)
-	}
-
-	// Разворачиваем порядок байтов
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
-	}
-
-	// Преобразуем байты в uint32 (учитываем, что у нас максимум 4 байта)
-	var result uint32
-	for i := 0; i < len(bytes); i++ {
-		result |= uint32(bytes[i]) << (8 * i)
-	}
-
-	return result, nil
+	// Преобразуем в uint32
+	return binary.LittleEndian.Uint32(bytes), nil
 }
 
 func ParseTAG6(hexString string, device *Device) {
 	num, _ := reverseHexToUint32(hexString)
 
+	// Извлекаем режим (первый байт)
 	mode := byte(num & 0xFF)
 	if mode != 0x01 {
 		return
 	}
 
+	// Извлекаем следующие байты для состояния
 	value := (num >> 8) & 0xFFFF
 	fmt.Printf("Анализируемое значение (байты 2 и 3): %016b\n", value)
 
-	ignition := value&(1<<0) != 0    // Бит 0 - зажигание
-	lock1 := value&(1<<8) != 0       // Бит 8 - состояние замка 1
-	lock2 := value&(1<<9) != 0       // Бит 9 - состояние замка 2
-	flashlight := value&(1<<16) != 0 // Бит 16 - фонарик
-	usbPower := value&(1<<18) != 0   // Бит 18 - питание USB-порта
+	// Извлекаем биты
+	ignition := (value & (1 << 0)) != 0    // Проверка бита 0 (зажигание)
+	lock1 := (value & (1 << 8)) != 0       // Проверка бита 8 (замок 1)
+	lock2 := (value & (1 << 9)) != 0       // Проверка бита 9 (замок 2)
+	flashlight := (value & (1 << 16)) != 0 // Проверка бита 16 (фонарик)
+	usbPower := (value & (1 << 18)) != 0   // Проверка бита 18 (питание USB)
 
 	device.TagSix = map[string]bool{
 		"ignition_st":      ignition,
