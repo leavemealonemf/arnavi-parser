@@ -738,8 +738,6 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
 			sComPackage, _ := hex.DecodeString(command)
 
-			fmt.Printf("received cmd: %v\n finded in map: %v", cmd, commands[cmd])
-
 			recievedCmd := &ReceivedCommand{
 				ServerTime: time.Now().UnixMicro(),
 				CMD:        command,
@@ -853,7 +851,7 @@ func bootHTTP() {
 }
 
 func initIOTCommands() {
-	commands := map[string]*Command{}
+	commands = map[string]*Command{}
 	commands["51330001"] = &Command{
 		Val:    "51330001",
 		NameEn: "Block Scooter Motor Wheel",
