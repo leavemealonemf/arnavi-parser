@@ -9,3 +9,8 @@ services:
         environment:
             MONGO_INITDB_ROOT_USERNAME: grf
             MONGO_INITDB_ROOT_PASSWORD: starplatinum
+        volumes:
+        - mongo_data:/data/db
+
+volumes:
+    mongo_data:
