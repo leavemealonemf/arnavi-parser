@@ -905,18 +905,18 @@ func PullToWS(w http.ResponseWriter, r *http.Request) {
 
 	wsConnections = append(wsConnections, conn)
 
-	// for {
-	// 	_, _, err := conn.ReadMessage()
-	// 	if err != nil {
-	// 		fmt.Println("[WS] Read message error. Exit", err.Error())
-	// 		break
-	// 	}
+	for {
+		_, _, err := conn.ReadMessage()
+		if err != nil {
+			fmt.Println("[WS] Read message error. Exit", err.Error())
+			break
+		}
 
-	// 	m := []byte("hello from iot king")
+		// m := []byte("hello from iot king")
 
-	// 	conn.WriteMessage(websocket.TextMessage, m)
-	// 	go WSMessageHandler(m)
-	// }
+		// conn.WriteMessage(websocket.TextMessage, m)
+		// go WSMessageHandler(m)
+	}
 
 	defer conn.Close()
 }
