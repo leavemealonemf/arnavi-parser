@@ -738,6 +738,8 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
 			sComPackage, _ := hex.DecodeString(command)
 
+			fmt.Printf("received cmd: %v\n finded in map: %v", cmd, commands[cmd])
+
 			recievedCmd := &ReceivedCommand{
 				ServerTime: time.Now().UnixMicro(),
 				CMD:        command,
