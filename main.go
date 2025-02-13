@@ -837,7 +837,46 @@ func HTTPIotLatestOneScooterData(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HTTPIotLatestOneScooterDataWithCmdsJournal(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	if r.Method == "GET" {
+		vars := mux.Vars(r)
+		imei := vars["imei"]
+
+		decImei, _ := strconv.Atoi(imei)
+
+		var res Device
+		var cmds []ReceivedCommand
+
+		mg.FindOneWithOpts(
+			ctx, scooterColl,
+			bson.D{{Key: "imei", Value: decImei}},
+			options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
+		).Decode(&res)
+
+		f := bson.D{{Key: "dvce_imei", Value: imei}}
+
+		cmdsCurr := mg.FindAllWithOpts(ctx, cmdsColl, f, options.Find().SetSort(bson.D{{Key: "_ts", Value: -1}}))
+		err := cmdsCurr.All(ctx, &cmds)
+
+		if err != nil {
+			fmt.Println("Get commands journal err:", err.Error())
+		}
+
+		iotResp := IOTResponse{
+			ID:         res.IMEI,
+			State:      &res,
+			CMDJournal: cmds,
+		}
+
+		j, _ := json.Marshal(iotResp)
+		fmt.Fprintln(w, string(j))
+	}
+}
+
 func bootHTTP() {
+
 	r := mux.NewRouter()
 	r.HandleFunc("/on/{imei}", HTTPCmdHandlerOn)
 	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
@@ -845,6 +884,7 @@ func bootHTTP() {
 	r.HandleFunc("/iot/scooters/all", HTTPIotDataScooters)
 	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
 	r.HandleFunc("/iot/scooters/{imei}/latest", HTTPIotLatestOneScooterData)
+	r.HandleFunc("/iot/scooters/{imei}/latest/journal", HTTPIotLatestOneScooterDataWithCmdsJournal)
 	http.Handle("/", r)
 	fmt.Println("Served HTTP on :8080")
 	http.ListenAndServe(":8080", nil)
