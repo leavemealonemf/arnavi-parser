@@ -7,10 +7,26 @@ services:
         ports:
         - 27017:27017
         environment:
-            MONGO_INITDB_ROOT_USERNAME: grf
-            MONGO_INITDB_ROOT_PASSWORD: starplatinum
+            MONGO_INITDB_ROOT_USERNAME: ${MONGO_USR}
+            MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
         volumes:
         - mongo_data:/data/db
 
+    postgres:
+        image: postgres:16.3
+        ports:
+            - 5432:29231
+        environment:
+            POSTGRES_PASSWORD: ${PG_PASS}
+            POSTGRES_USER: ${PG_USER}
+            POSTGRES_DB: ${PG_DB}
+        volumes:
+            - pg_data:/var/lib/postgresql/data
+        healthcheck:
+            test: ["CMD", "pg_isready -U $${PG_USER} -d $${PG_DB}"]
+            interval: 10s
+            timeout: 5s
+            retries: 5
 volumes:
     mongo_data:
+    pg_data:
