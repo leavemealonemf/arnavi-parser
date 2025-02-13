@@ -33,6 +33,7 @@ var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
 var receivedCommands []*ReceivedCommand
+var addedImeis []int64
 
 func BytesToHexString(bytes []byte) string {
 	encoded := hex.EncodeToString(bytes)
@@ -761,16 +762,30 @@ func HTTPIotDataScooters(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 
 	if r.Method == "GET" {
-		curr := mg.FindAll(ctx, scooterColl)
 
-		if curr == nil {
-			fmt.Fprintln(w, "baaad")
+		var response []Device
+
+		for _, v := range addedImeis {
+			var res *Device
+			mg.FindOneWithOpts(
+				ctx, scooterColl,
+				bson.D{{Key: "imei", Value: v}},
+				options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
+			).Decode(&res)
+
+			if res == nil {
+				continue
+			}
+
+			response = append(response, *res)
+		}
+
+		if len(response) == 0 {
+			fmt.Fprintln(w, "[]")
 			return
 		}
 
-		var res []Device
-		curr.All(ctx, &res)
-		j, _ := json.Marshal(res)
+		j, _ := json.Marshal(response)
 		fmt.Fprintln(w, string(j))
 	}
 }
@@ -881,6 +896,7 @@ func bootHTTP() {
 	r.HandleFunc("/on/{imei}", HTTPCmdHandlerOn)
 	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
+	r.HandleFunc("/iot/scooters", HTTPIotDataScooters)
 	r.HandleFunc("/iot/scooters/all", HTTPIotDataScooters)
 	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
 	r.HandleFunc("/iot/scooters/{imei}/latest", HTTPIotLatestOneScooterData)
@@ -968,6 +984,7 @@ func main() {
 	deviceIdsBytesAssotiation = map[int]string{
 		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "s3_st", 6: "s2_st", 7: "s1_st", 8: "s0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
 	}
+	addedImeis = append(addedImeis, 866011050296805, 866039048453774)
 
 	initIOTCommands()
 
