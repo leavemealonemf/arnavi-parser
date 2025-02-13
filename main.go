@@ -20,10 +20,11 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-var testDevices []int64
 var devices []*Device
 
 // var connections []*Connection
@@ -777,12 +778,76 @@ func HTTPIotDataScooters(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func HTTPIotFullDataForOneScooter(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	if r.Method == "GET" {
+		vars := mux.Vars(r)
+		imei := vars["imei"]
+
+		decImei, _ := strconv.Atoi(imei)
+		f := bson.D{{Key: "imei", Value: decImei}}
+
+		curr := mg.FindAllWithOpts(
+			ctx, scooterColl,
+			f,
+			options.Find().SetSort(bson.D{{Key: "_ts", Value: -1}}),
+		)
+
+		if curr == nil {
+			fmt.Fprintln(w, "[]")
+			return
+		}
+
+		var res []Device
+		curr.All(ctx, &res)
+
+		if len(res) == 0 {
+			fmt.Fprintln(w, "[]")
+			return
+		}
+
+		j, _ := json.Marshal(res)
+		fmt.Fprintln(w, string(j))
+	}
+}
+
+func HTTPIotLatestOneScooterData(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "application/json")
+
+	if r.Method == "GET" {
+		vars := mux.Vars(r)
+		imei := vars["imei"]
+
+		decImei, _ := strconv.Atoi(imei)
+
+		var res Device
+		var rMap map[string]any
+
+		mg.FindOneWithOpts(
+			ctx, scooterColl,
+			bson.D{{Key: "imei", Value: decImei}},
+			options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
+		).Decode(&res)
+
+		rMap = map[string]any{
+			"id":    res.IMEI,
+			"state": res,
+		}
+
+		j, _ := json.Marshal(rMap)
+		fmt.Fprintln(w, string(j))
+	}
+}
+
 func bootHTTP() {
 	r := mux.NewRouter()
 	r.HandleFunc("/on/{imei}", HTTPCmdHandlerOn)
 	r.HandleFunc("/off/{imei}", HTTPCmdHandlerOff)
 	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
-	r.HandleFunc("/iot/scooters", HTTPIotDataScooters)
+	r.HandleFunc("/iot/scooters/all", HTTPIotDataScooters)
+	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
+	r.HandleFunc("/iot/scooters/{imei}/latest", HTTPIotLatestOneScooterData)
 	http.Handle("/", r)
 	fmt.Println("Served HTTP on :8080")
 	http.ListenAndServe(":8080", nil)
@@ -814,6 +879,7 @@ func initIOTCommands() {
 }
 
 var scooterColl *mongo.Collection
+var cmdsColl *mongo.Collection
 var ctx = context.TODO()
 
 func init() {
@@ -841,12 +907,11 @@ func main() {
 	mg.Seed(mgClient, ctx)
 
 	scooterColl = mgClient.Database("iot").Collection("scooters")
+	cmdsColl = mgClient.Database("iot").Collection("cmds")
 
 	serve, err := net.Listen("tcp", ":20550")
 
 	devices = make([]*Device, 0)
-	testDevices = make([]int64, 0)
-	testDevices = append(testDevices, 866011050296805)
 	connections = map[int64]*Connection{}
 	deviceStatusBitPos = [][]int{{27, 26}, {25}, {24, 23}, {22}, {21, 20}, {19, 18}, {17, 16}, {15, 14}, {13, 12}, {11, 10, 9}, {8, 7, 6}, {5}, {4, 3, 2}, {1, 0}}
 	deviceIdsBytesAssotiation = map[int]string{

@@ -45,6 +45,10 @@ func Insert(ctx context.Context, col *mongo.Collection, data interface{}) {
 	}
 }
 
+func FindOneWithOpts(ctx context.Context, col *mongo.Collection, f interface{}, opts *options.FindOneOptions) *mongo.SingleResult {
+	return col.FindOne(ctx, f, opts)
+}
+
 func FindAll(ctx context.Context, col *mongo.Collection) *mongo.Cursor {
 	f := bson.D{}
 	curr, err := col.Find(ctx, f)
@@ -54,5 +58,14 @@ func FindAll(ctx context.Context, col *mongo.Collection) *mongo.Cursor {
 		return nil
 	}
 
+	return curr
+}
+
+func FindAllWithOpts(ctx context.Context, col *mongo.Collection, f interface{}, opts *options.FindOptions) *mongo.Cursor {
+	curr, err := col.Find(ctx, f, opts)
+	if err != nil {
+		fmt.Println("[MONGO] Find all err:", err.Error())
+		return nil
+	}
 	return curr
 }
