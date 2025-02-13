@@ -286,18 +286,16 @@ func ParseTAG5Data(hexValue string, device *Device) {
 }
 
 func ParseTAG6(hexString string, device *Device) {
-	value := uint32(hexToDec(hexString))
+	num := hexToDec(hexString)
 
-	if (value>>24)&0xFF != 0x01 {
-		fmt.Println("Неверный режим входа TAG6. Пропускаем обработку.")
-		return
-	}
+	value := uint32((num >> 8) & 0xFFFF) // Берем только байты 2 и 3
 
-	ignitionState := (value >> 0) & 0x01    // бит 0 - зажигание
-	doorLock1State := (value >> 8) & 0x01   // бит 8 - замок 1
-	doorLock2State := (value >> 9) & 0x01   // бит 9 - замок 2
-	flashlightState := (value >> 16) & 0x01 // бит 16 - фонарик
-	usbPowerState := (value >> 18) & 0x01   // бит 18 - питание USB порта
+	// Проверяем состояние битов
+	ignitionState := value & (1 << 0)    // Бит 0 - зажигание
+	doorLock1State := value & (1 << 8)   // Бит 8 - состояние замка 1
+	doorLock2State := value & (1 << 9)   // Бит 9 - состояние замка 2
+	flashlightState := value & (1 << 16) // Бит 16 - фонарик
+	usbPowerState := value & (1 << 18)   // Бит 18 - питание USB-порта
 
 	device.TagSix = map[string]uint32{
 		"ignition_st":      ignitionState,
