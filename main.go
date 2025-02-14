@@ -286,8 +286,7 @@ func ParseTAG5Data(hexValue string, device *Device) {
 }
 
 func ParseTAG6(hexStringRev string, device *Device) {
-	str := hexStringRev[2:len(hexStringRev)]
-	value := hexToDec(str)
+	value := hexToDec(hexStringRev)
 
 	ignitionState := (value >> 0) & 0x01
 	doorLock1State := (value >> 8) & 0x01
@@ -549,7 +548,8 @@ func handleServe(conn net.Conn) {
 							ParseTAG9(tagParamRv, &device)
 							break
 						case 6:
-							p := BytesToHexString(reverseBytes(tagParam))
+							param := tagParam[2:len(tagParam)]
+							p := BytesToHexString(reverseBytes(param))
 							ParseTAG6(p, &device)
 							break
 						case 3, 4:
