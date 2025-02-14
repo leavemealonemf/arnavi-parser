@@ -3,7 +3,6 @@ package main
 import (
 	. "arnaviparser/structs"
 	"context"
-	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -18,6 +17,10 @@ import (
 
 	mg "arnaviparser/db/mongo"
 
+	. "arnaviparser/common/utils"
+
+	. "arnaviparser/protocols/arnavi"
+
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -28,7 +31,6 @@ import (
 
 var devices []*Device
 
-// var connections []*Connection
 var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
@@ -36,307 +38,6 @@ var commands map[string]*Command
 var receivedCommands []*ReceivedCommand
 var addedImeis []int64
 var wsConnections []*websocket.Conn
-
-func BytesToHexString(bytes []byte) string {
-	encoded := hex.EncodeToString(bytes)
-	return encoded
-}
-
-func HexToBytes(hexString string) []byte {
-	bytes, _ := hex.DecodeString(hexString)
-	return bytes
-}
-
-func parseIMEI(hexIMEI string) int64 {
-	bytes, _ := hex.DecodeString(hexIMEI)
-
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
-	}
-
-	reversedIMEI := BytesToHexString(bytes)
-
-	decIMEI, _ := strconv.ParseInt(reversedIMEI, 16, 64)
-	return decIMEI
-}
-
-func reverseBytes(hexString string) []byte {
-	bytes, _ := hex.DecodeString(hexString)
-
-	for i, j := 0, len(bytes)-1; i < j; i, j = i+1, j-1 {
-		bytes[i], bytes[j] = bytes[j], bytes[i]
-	}
-
-	return bytes
-}
-
-func hexToDec(hexString string) int64 {
-	dec, _ := strconv.ParseInt(hexString, 16, 64)
-	return dec
-}
-
-func PacketHexChecksum(hexPacket *HEXPacket) string {
-	var packetData string = hexPacket.Unixtime + hexPacket.TagsData
-	revBytes := reverseBytes(packetData)
-
-	checksum := byte(0)
-	for _, b := range revBytes {
-		checksum += b
-	}
-
-	return fmt.Sprintf("%02x", checksum)
-}
-
-func Checksum(val []byte) string {
-	checksum := byte(0)
-	for _, b := range val {
-		checksum += b
-	}
-
-	return hex.EncodeToString([]byte{checksum})
-}
-
-func GenСmdTokenHex() (string, error) {
-	bytes := make([]byte, 4)
-	_, err := rand.Read(bytes)
-	if err != nil {
-		return "", fmt.Errorf("GenСmdTokenHex err: %v\n", err.Error())
-	}
-	bytes[0] = 0xFF
-	return hex.EncodeToString(bytes), nil
-}
-
-func sendServerComSuccessed(codeLine string, conn net.Conn) {
-	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
-	sComPackage, _ := hex.DecodeString("7B00017D")
-	// sComPackage, _ := hex.DecodeString("7B02010201017D")
-	// sComPackage, _ := hex.DecodeString("7B02010201017D")
-	// sComPackage, _ := hex.DecodeString("7B060102DDCCBBAA01017D")
-
-	conn.Write(sComPackage)
-}
-
-func sendServerComFailed(codeLine string, conn net.Conn) {
-	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM failed...\n", codeLine)
-	sComPackage, _ := hex.DecodeString("7B00FE7D")
-	conn.Write(sComPackage)
-}
-
-func sendTestCMD(conn net.Conn) {
-	fmt.Printf("Send COMMAND...\n")
-	// sComPackage, _ := hex.DecodeString("7B03FF333300007D")
-	// sComPackage, _ := hex.DecodeString("7B03FF343300017D")
-	// sComPackage, _ := hex.DecodeString("7B08FF57FF314e55513300007D")
-	// sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
-	sComPackage, _ := hex.DecodeString("7B08FF58FF314e55513300017D")
-	// 7B08FF57FF314e55513300007D
-	// 7B03FF343300017D
-	conn.Write(sComPackage)
-}
-
-func DecodeVSStatementFlags(hexStr string, device *Device) {
-	data, err := hex.DecodeString(hexStr)
-	if err != nil || len(data) < 2 {
-		fmt.Printf("[DecodeVSStatementFlags] Invalid hex string: %s", hexStr)
-		return
-	}
-
-	byte0 := data[0]
-	byte1 := data[1]
-
-	motorRunning := byte0&0x01 != 0
-	mode := (byte0 >> 1) & 0x03
-	charging := byte0&0x08 != 0
-	screenOff := byte0&0x10 != 0
-	pedestrianMode := byte0&0x20 != 0
-	overheat := byte0&0x80 != 0
-
-	modes := map[byte]string{
-		0b00: "D",
-		0b01: "ECO",
-		0b10: "S",
-	}
-
-	device.VirtualSensors.StatementFlags.MotorRunning = motorRunning
-	device.VirtualSensors.StatementFlags.Mode = modes[mode]
-	device.VirtualSensors.StatementFlags.Charging = charging
-	device.VirtualSensors.StatementFlags.ScreenOff = screenOff
-	device.VirtualSensors.StatementFlags.PedestrianMode = pedestrianMode
-	device.VirtualSensors.StatementFlags.Overheat = overheat
-	device.VirtualSensors.StatementFlags.ScooterType = byte1
-}
-
-func AbortTCPDeviceConn(conn *Connection) {
-	if connections[conn.Device.IMEI] != nil {
-		delete(connections, conn.Device.IMEI)
-	}
-}
-
-func BindDeviceMainPropertys(device *Device) {
-	device.Charge = device.VirtualSensors.MainBatteryCharge
-	device.Speed = device.VirtualSensors.SpeedKMH
-	device.MoveSensor = device.DeviceStatus2["mw"] == 1
-	device.SimNumber = uint8(device.DeviceStatus2["sim_t"])
-	device.GPS = uint8(device.DeviceStatus2["nav_st"])
-	device.GSM = uint8(device.DeviceStatus2["gsm_st"])
-	device.Charging = device.VirtualSensors.StatementFlags.Charging
-	device.LockStatus = device.DeviceStatus2["device_status"] == 2 || device.DeviceStatus2["device_status"] == 3
-	if device.DeviceStatus2["sim_t"] == 0 {
-		device.IsSim = device.DeviceStatus2["sim1_st"] == 1
-	} else {
-		device.IsSim = device.DeviceStatus2["sim2_st"] == 1
-	}
-}
-
-func ParseTAG1Data(revBytes []byte, device *Device) {
-	if len(revBytes) != 4 {
-		return
-	}
-	externalVoltage := uint16(revBytes[0])<<8 | uint16(revBytes[1])
-	internalVoltage := uint16(revBytes[2])<<8 | uint16(revBytes[3])
-	device.TAGOne.ExternalVolt = externalVoltage
-	device.TAGOne.InternalVilt = internalVoltage
-}
-
-func ParseTags7And200(revBytes []byte, device *Device, simNum uint8) {
-	if len(revBytes) != 4 {
-		return
-	}
-
-	lac := uint16(revBytes[0])<<8 | uint16(revBytes[1])
-	cellID := uint16(revBytes[2])<<8 | uint16(revBytes[3])
-
-	if simNum == 1 {
-		if device.SimOne == nil {
-			device.SimOne = &SimStatus{}
-		}
-		device.SimOne.LAC = lac
-		device.SimOne.CellID = cellID
-	} else {
-		if device.SimTwo == nil {
-			device.SimTwo = &SimStatus{}
-		}
-		device.SimTwo.LAC = lac
-		device.SimTwo.CellID = cellID
-	}
-}
-
-func ParseTags8And201(revBytes []byte, device *Device, simNum uint8) {
-	if len(revBytes) != 4 {
-		return
-	}
-
-	signalLevel := revBytes[0]                          // Уровень сигнала (0-31)
-	mcc := uint16(revBytes[1])<<8 | uint16(revBytes[2]) // Mobile Country Code (MCC)
-	mnc := revBytes[3]                                  // Mobile Network Code (MNC)
-
-	operator := map[byte]string{
-		0x01: "МТС",
-		0x02: "МегаФон",
-		0x07: "СМАРТС",
-		0x99: "Билайн",
-	}[mnc]
-
-	if simNum == 1 {
-		if device.SimOne == nil {
-			device.SimOne = &SimStatus{}
-		}
-		device.SimOne.GSMSigLvl = signalLevel
-		device.SimOne.MobileCountyCode = mcc
-		device.SimOne.MobileNetCode = mnc
-		device.SimOne.OperatorName = operator
-	} else {
-		if device.SimTwo == nil {
-			device.SimTwo = &SimStatus{}
-		}
-		device.SimTwo.GSMSigLvl = signalLevel
-		device.SimTwo.MobileCountyCode = mcc
-		device.SimTwo.MobileNetCode = mnc
-		device.SimTwo.OperatorName = operator
-	}
-}
-
-func processICCID(revBytes []byte, device *Device, partNum uint8) {
-	device.ICCIDParts[partNum] = revBytes
-}
-
-func ParseTAG5Data(hexValue string, device *Device) {
-	data := reverseBytes(hexValue)
-
-	speedKnots := float64(data[0]) * 1.852
-	gpsSatellites := data[1] & 0x0F
-	glonassSatellites := (data[1] >> 4) & 0x0F
-	totalSatellites := gpsSatellites + glonassSatellites
-	altitudeMeters := int(data[2]) * 10
-	rate := int(data[3]) * 2
-
-	device.TagFive.SpeedKnots = speedKnots
-	device.TagFive.SatGps = gpsSatellites
-	device.TagFive.SatGlonass = glonassSatellites
-	device.TagFive.Alt = altitudeMeters
-	device.TagFive.Azimut = rate
-	device.TagFive.TotalSatellites = totalSatellites
-
-	device.SpeedKnots = speedKnots
-	device.SatGps = gpsSatellites
-	device.SatGlonass = glonassSatellites
-	device.Alt = altitudeMeters
-	device.Azimut = rate
-	device.TotalSatellites = totalSatellites
-}
-
-func ParseTAG6(hexStringRev string, device *Device) {
-	value := hexToDec(hexStringRev)
-
-	ignitionState := (value >> 0) & 0x01
-	doorLock1State := (value >> 8) & 0x01
-	doorLock2State := (value >> 9) & 0x01
-	flashlightState := (value >> 16) & 0x01
-	usbPowerState := (value >> 18) & 0x01
-
-	device.TagSix = map[string]int64{
-		"ignition_st":      ignitionState,
-		"door_one_lock_st": doorLock1State,
-		"door_two_lock_st": doorLock2State,
-		"flash_light_st":   flashlightState,
-		"usb_pwr_st":       usbPowerState,
-	}
-}
-
-func ParseTAG9(hexStr string, device *Device) {
-	data, err := hex.DecodeString(hexStr)
-	if err != nil || len(data) != 4 {
-		return
-	}
-
-	value := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
-	voltage := (value >> 24) & 0xFF
-
-	device.DeviceStatus1 = map[string]uint32{
-		"in0":     (value >> 0) & 1,
-		"in1":     (value >> 1) & 1,
-		"in2":     (value >> 2) & 1,
-		"in3":     (value >> 3) & 1,
-		"in4":     (value >> 4) & 1,
-		"in5":     (value >> 5) & 1,
-		"in6":     (value >> 6) & 1,
-		"in7":     (value >> 7) & 1,
-		"out1":    (value >> 8) & 1,
-		"out2":    (value >> 9) & 1,
-		"out3":    (value >> 10) & 1,
-		"gsm_st":  (value >> 12) & 3,
-		"nav_st":  (value >> 14) & 3,
-		"mw":      (value >> 16) & 1,
-		"sim_t":   (value >> 17) & 1,
-		"sim_in":  (value >> 18) & 1,
-		"st0":     (value >> 19) & 1,
-		"st1":     (value >> 20) & 1,
-		"st2":     (value >> 21) & 1,
-		"pwr_in":  (value >> 22) & 3,
-		"pwr_ext": voltage,
-	}
-
-}
 
 func handleServe(conn net.Conn) {
 	defer conn.Close()
@@ -397,24 +98,10 @@ func handleServe(conn net.Conn) {
 				// headerBytes = headerHex[0:18]
 			}
 
-			decIMEI := parseIMEI(header.IMEI)
+			decIMEI := ParseIMEI(header.IMEI)
 			// isFindImei := false
 
 			// // VALIDATE IMEI IN DATABASE
-			// for i := 0; i < len(testDevices); i++ {
-			// 	if decIMEI == testDevices[i] {
-			// 		fmt.Println("Find imei. Continue...")
-			// 		isFindImei = true
-			// 		break
-			// 	} else {
-			// 		fmt.Println("Find imei error. Break...")
-			// 		break
-			// 	}
-			// }
-
-			// if !isFindImei {
-			// 	break
-			// }
 
 			// // END VALIDATE IMEI IN DATABASE
 
@@ -448,11 +135,11 @@ func handleServe(conn net.Conn) {
 				if strings.ToLower(hexPacket.TypeOfContent) == "01" {
 					start += 2 // skip type
 					hexPacket.PacketDataLen = hexPackageData[start : start+2]
-					dataLenBytes := (hexToDec(hexPackageData[start:start+2]) * 2)
+					dataLenBytes := (HexToDec(hexPackageData[start:start+2]) * 2)
 					start += 4 // skip len
 
 					hexPacket.Unixtime = hexPackageData[start : start+8]
-					timestamp := hexToDec(BytesToHexString(reverseBytes(hexPacket.Unixtime)))
+					timestamp := HexToDec(BytesToHexString(ReverseBytes(hexPacket.Unixtime)))
 					device.Timestamp = timestamp
 
 					start += 8 // skip ts
@@ -475,22 +162,22 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						tagIDDec := hexToDec(string(hexPacket.TagsData[i : i+2]))
+						tagIDDec := HexToDec(string(hexPacket.TagsData[i : i+2]))
 						tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
 						// vs sensors
 						case 190:
-							internalTagIDDec := hexToDec(string(hexPacket.TagsData[i+2 : i+4]))
-							internalTagParamRv := BytesToHexString(reverseBytes(hexPacket.TagsData[i+4 : i+10]))
+							internalTagIDDec := HexToDec(string(hexPacket.TagsData[i+2 : i+4]))
+							internalTagParamRv := BytesToHexString(ReverseBytes(hexPacket.TagsData[i+4 : i+10]))
 							switch internalTagIDDec {
 							case 61:
-								speedKmh := hexToDec(internalTagParamRv)
+								speedKmh := HexToDec(internalTagParamRv)
 								device.VirtualSensors.SpeedKMH = uint8(speedKmh)
 								break
 							case 62:
-								avgBtCharge := hexToDec(internalTagParamRv)
+								avgBtCharge := HexToDec(internalTagParamRv)
 								device.VirtualSensors.AverageBatteryCharge = uint8(avgBtCharge)
 								break
 							case 63:
@@ -498,22 +185,22 @@ func handleServe(conn net.Conn) {
 								DecodeVSStatementFlags(internalParam, &device)
 								break
 							case 66:
-								mainBtCharge := hexToDec(internalTagParamRv)
+								mainBtCharge := HexToDec(internalTagParamRv)
 								device.VirtualSensors.MainBatteryCharge = uint8(mainBtCharge)
 							case 67:
-								additionalBtCharge := hexToDec(internalTagParamRv)
+								additionalBtCharge := HexToDec(internalTagParamRv)
 								device.VirtualSensors.AdditionalBatteryCharge = uint8(additionalBtCharge)
 							case 68:
-								errCode := hexToDec(internalTagParamRv)
+								errCode := HexToDec(internalTagParamRv)
 								device.VirtualSensors.ErrorCode = uint8(errCode)
 							case 69:
-								mileagePerTrip := hexToDec(internalTagParamRv)
+								mileagePerTrip := HexToDec(internalTagParamRv)
 								device.VirtualSensors.MileagePerTrip = uint32(mileagePerTrip)
 							case 70:
-								motorWheelControllerErrors := hexToDec(internalTagParamRv)
+								motorWheelControllerErrors := HexToDec(internalTagParamRv)
 								device.VirtualSensors.MotorWheelControllerErrors = uint16(motorWheelControllerErrors)
 							case 71:
-								bmsError := hexToDec(internalTagParamRv)
+								bmsError := HexToDec(internalTagParamRv)
 								device.VirtualSensors.BMSErrors = uint8(bmsError)
 							default:
 								break
@@ -521,7 +208,7 @@ func handleServe(conn net.Conn) {
 							break
 						// device status
 						case 99:
-							tagParamRv := BytesToHexString(reverseBytes(tagParam))
+							tagParamRv := BytesToHexString(ReverseBytes(tagParam))
 							num, _ := strconv.ParseInt(tagParamRv, 16, 64)
 
 							devicePreResult := map[int]int{}
@@ -544,16 +231,16 @@ func handleServe(conn net.Conn) {
 							break
 
 						case 9:
-							tagParamRv := BytesToHexString(reverseBytes(tagParam))
+							tagParamRv := BytesToHexString(ReverseBytes(tagParam))
 							ParseTAG9(tagParamRv, &device)
 							break
 						case 6:
 							param := tagParam[2:len(tagParam)]
-							p := BytesToHexString(reverseBytes(param))
+							p := BytesToHexString(ReverseBytes(param))
 							ParseTAG6(p, &device)
 							break
 						case 3, 4:
-							rvParamNum := hexToDec(BytesToHexString(reverseBytes(tagParam)))
+							rvParamNum := HexToDec(BytesToHexString(ReverseBytes(tagParam)))
 							v := math.Float32frombits(uint32(rvParamNum))
 							if tagIDDec == 3 {
 								device.Lat = v
@@ -565,28 +252,28 @@ func handleServe(conn net.Conn) {
 							ParseTAG5Data(tagParam, &device)
 							break
 						case 1:
-							ParseTAG1Data(reverseBytes(tagParam), &device)
+							ParseTAG1Data(ReverseBytes(tagParam), &device)
 							break
 						case 7, 200:
 							if tagIDDec == 7 {
-								ParseTags7And200(reverseBytes(tagParam), &device, 1)
+								ParseTags7And200(ReverseBytes(tagParam), &device, 1)
 							} else {
-								ParseTags7And200(reverseBytes(tagParam), &device, 2)
+								ParseTags7And200(ReverseBytes(tagParam), &device, 2)
 							}
 							break
 						case 8, 201:
 							if tagIDDec == 8 {
-								ParseTags8And201(reverseBytes(tagParam), &device, 1)
+								ParseTags8And201(ReverseBytes(tagParam), &device, 1)
 							} else {
-								ParseTags8And201(reverseBytes(tagParam), &device, 2)
+								ParseTags8And201(ReverseBytes(tagParam), &device, 2)
 							}
 							break
 
 						// case 253, 254, 202, 230:
 						// 	if tagIDDec == 253 || tagIDDec == 202 {
-						// 		processICCID(reverseBytes(tagParam), &device, 1)
+						// 		processICCID(ReverseBytes(tagParam), &device, 1)
 						// 	} else {
-						// 		processICCID(reverseBytes(tagParam), &device, 2)
+						// 		processICCID(ReverseBytes(tagParam), &device, 2)
 						// 	}
 						// 	break
 						default:
@@ -678,6 +365,44 @@ func handleServe(conn net.Conn) {
 			}
 		}
 	}
+}
+
+func BindDeviceMainPropertys(device *Device) {
+	device.Charge = device.VirtualSensors.MainBatteryCharge
+	device.Speed = device.VirtualSensors.SpeedKMH
+	device.MoveSensor = device.DeviceStatus2["mw"] == 1
+	device.SimNumber = uint8(device.DeviceStatus2["sim_t"])
+	device.GPS = uint8(device.DeviceStatus2["nav_st"])
+	device.GSM = uint8(device.DeviceStatus2["gsm_st"])
+	device.Charging = device.VirtualSensors.StatementFlags.Charging
+	device.LockStatus = device.DeviceStatus2["device_status"] == 2 || device.DeviceStatus2["device_status"] == 3
+	if device.DeviceStatus2["sim_t"] == 0 {
+		device.IsSim = device.DeviceStatus2["sim1_st"] == 1
+	} else {
+		device.IsSim = device.DeviceStatus2["sim2_st"] == 1
+	}
+}
+
+func sendServerComSuccessed(codeLine string, conn net.Conn) {
+	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM success...\n", codeLine)
+	sComPackage, _ := hex.DecodeString("7B00017D")
+	conn.Write(sComPackage)
+}
+
+func sendServerComFailed(codeLine string, conn net.Conn) {
+	fmt.Printf("[LINE %v] Get package. Sending SERVER_COM failed...\n", codeLine)
+	sComPackage, _ := hex.DecodeString("7B00FE7D")
+	conn.Write(sComPackage)
+}
+
+func AbortTCPDeviceConn(conn *Connection) {
+	if connections[conn.Device.IMEI] != nil {
+		delete(connections, conn.Device.IMEI)
+	}
+}
+
+func processICCID(revBytes []byte, device *Device, partNum uint8) {
+	device.ICCIDParts[partNum] = revBytes
 }
 
 func printHexPacketStructData(packet *HEXPacket) {
