@@ -286,7 +286,8 @@ func ParseTAG5Data(hexValue string, device *Device) {
 }
 
 func ParseTAG6(hexStringRev string, device *Device) {
-	value := hexToDec(hexStringRev)
+	str := hexStringRev[2:len(hexStringRev)]
+	value := hexToDec(str)
 
 	ignitionState := (value >> 0) & 0x01
 	doorLock1State := (value >> 8) & 0x01
