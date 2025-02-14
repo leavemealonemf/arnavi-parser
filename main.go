@@ -285,21 +285,16 @@ func ParseTAG5Data(hexValue string, device *Device) {
 	device.TotalSatellites = totalSatellites
 }
 
-func ParseTAG6(hexString string, device *Device) {
-	value := uint32(hexToDec(hexString))
+func ParseTAG6(hexStringRev string, device *Device) {
+	value := hexToDec(hexStringRev)
 
-	if (value>>24)&0xFF != 0x01 {
-		fmt.Println("Неверный режим входа TAG6. Пропускаем обработку.")
-		return
-	}
+	ignitionState := (value >> 0) & 0x01
+	doorLock1State := (value >> 8) & 0x01
+	doorLock2State := (value >> 9) & 0x01
+	flashlightState := (value >> 16) & 0x01
+	usbPowerState := (value >> 18) & 0x01
 
-	ignitionState := (value >> 0) & 0x01    // бит 0 - зажигание
-	doorLock1State := (value >> 8) & 0x01   // бит 8 - замок 1
-	doorLock2State := (value >> 9) & 0x01   // бит 9 - замок 2
-	flashlightState := (value >> 16) & 0x01 // бит 16 - фонарик
-	usbPowerState := (value >> 18) & 0x01   // бит 18 - питание USB порта
-
-	device.TagSix = map[string]uint32{
+	device.TagSix = map[string]int64{
 		"ignition_st":      ignitionState,
 		"door_one_lock_st": doorLock1State,
 		"door_two_lock_st": doorLock2State,
@@ -553,7 +548,8 @@ func handleServe(conn net.Conn) {
 							ParseTAG9(tagParamRv, &device)
 							break
 						case 6:
-							ParseTAG6(tagParam, &device)
+							p := BytesToHexString(reverseBytes(tagParam))
+							ParseTAG6(p, &device)
 							break
 						case 3, 4:
 							rvParamNum := hexToDec(BytesToHexString(reverseBytes(tagParam)))
