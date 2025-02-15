@@ -35,7 +35,7 @@ var connections map[int64]*Connection
 var deviceStatusBitPos [][]int
 var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
-var receivedCommands []*ReceivedCommand
+var receivedCommands map[string]*ReceivedCommand
 var addedImeis []int64
 var wsConnections []*websocket.Conn
 
@@ -306,31 +306,35 @@ func handleServe(conn net.Conn) {
 					cs := hexPackageData[start : start+2]
 					start += 2
 
-					for _, v := range receivedCommands {
-						if v.Status == "completed" || v.Status == "error" {
-							continue
-						}
+					receivedCommand := receivedCommands[token]
 
-						if strings.Compare(v.Token, token) == 0 {
-							if strings.Compare(errCode, "00") == 0 {
-								v.Status = "completed"
-							} else {
-								v.Status = "error"
-							}
-
-							f := bson.D{{Key: "token", Value: token}}
-
-							upd := bson.D{
-								{"$set", bson.D{
-									{Key: "status", Value: v.Status},
-									{Key: "_ct", Value: time.Now().UnixMicro()},
-								}},
-							}
-							mg.UpdOne(ctx, cmdsColl, f, upd)
-						}
+					if receivedCommand == nil {
+						break
 					}
 
+					if receivedCommand.Status == "completed" || receivedCommand.Status == "error" {
+						break
+					}
+
+					if strings.Compare(errCode, "00") == 0 {
+						receivedCommand.Status = "completed"
+					} else {
+						receivedCommand.Status = "error"
+					}
+
+					f := bson.D{{Key: "token", Value: token}}
+
+					upd := bson.D{
+						{"$set", bson.D{
+							{Key: "status", Value: receivedCommand.Status},
+							{Key: "_ct", Value: time.Now().UnixMicro()},
+						}},
+					}
+					mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
+
+					delete(receivedCommands, token)
+
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
 					break
@@ -448,7 +452,7 @@ func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
 				CMDInfo:    commands[cmd],
 			}
 
-			receivedCommands = append(receivedCommands, recievedCmd)
+			receivedCommands[token] = recievedCmd
 			mg.Insert(ctx, cmdsColl, recievedCmd)
 
 			c.Conn.Write(sComPackage)
@@ -775,6 +779,7 @@ func main() {
 		0: "device_status", 1: "bt", 2: "msd", 3: "guard_zone_ctrl", 4: "mw", 5: "s3_st", 6: "s2_st", 7: "s1_st", 8: "s0_st", 9: "sim2_st", 10: "sim1_st", 11: "sim_t", 12: "gsm_st", 13: "nav_st",
 	}
 	addedImeis = append(addedImeis, 866011050296805, 866039048453774)
+	receivedCommands = map[string]*ReceivedCommand{}
 
 	initIOTCommands()
 
@@ -783,22 +788,6 @@ func main() {
 	}
 
 	log.Println("Server started:", serve.Addr().Network())
-
-	// view cmds statuses
-	go func() {
-		for {
-			if len(receivedCommands) > 0 {
-				fmt.Println("COMMANDS STATUS:")
-				for _, v := range receivedCommands {
-					fmt.Println("------------")
-					fmt.Printf("\ncmd: %v\ntoken: %v\nstatus: %v\n\n", v.CMD, v.Token, v.Status)
-					fmt.Println("------------")
-				}
-			}
-
-			time.Sleep(time.Second * 20)
-		}
-	}()
 
 	go bootHTTP()
 
