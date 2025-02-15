@@ -39,13 +39,16 @@ var receivedCommands map[string]*ReceivedCommand
 var addedImeis []int64
 var wsConnections []*websocket.Conn
 
+const (
+	tcpMsgBuff = 5000
+)
+
 func handleServe(conn net.Conn) {
 	defer conn.Close()
 
 	isFirstConn := true
-	// isCmdSended := false
 
-	buff := make([]byte, 5000)
+	buff := make([]byte, tcpMsgBuff)
 
 	var device Device
 
@@ -111,9 +114,6 @@ func handleServe(conn net.Conn) {
 			connections[decIMEI] = connection
 
 			// send SERVER_COM
-			// 7B0400CA5E9F6F5E7D
-			// 67A8C24B
-			// data, err := hex.DecodeString("7B0400CA5E9F6F5E7D")
 			data, _ := hex.DecodeString("7B04001C67A8C24B7D")
 			conn.Write(data)
 			fmt.Println("sending server com...")
