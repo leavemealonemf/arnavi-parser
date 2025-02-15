@@ -185,6 +185,7 @@ func ParseTAG6(hexStringRev string, device *Device) {
 	doorLock1State := (value >> 8) & 0x01
 	doorLock2State := (value >> 9) & 0x01
 	flashlightState := (value >> 16) & 0x01
+	alarmState := (value >> 17) & 0x01
 	usbPowerState := (value >> 18) & 0x01
 
 	device.TagSix = map[string]int64{
@@ -192,6 +193,7 @@ func ParseTAG6(hexStringRev string, device *Device) {
 		"door_one_lock_st": doorLock1State,
 		"door_two_lock_st": doorLock2State,
 		"flash_light_st":   flashlightState,
+		"alarm_st":         alarmState,
 		"usb_pwr_st":       usbPowerState,
 	}
 }
