@@ -1,6 +1,7 @@
 package main
 
 import (
+	"arnaviparser/broker/rabbit"
 	. "arnaviparser/structs"
 	"context"
 	"encoding/hex"
@@ -24,6 +25,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -332,6 +334,8 @@ func handleServe(conn net.Conn) {
 					}
 					mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
+
+					AcceptCommand(receivedCommand)
 
 					delete(receivedCommands, token)
 
@@ -739,6 +743,90 @@ func initIOTCommands() {
 	}
 }
 
+func AcceptCommand(rc *ReceivedCommand) {
+	r, _ := json.Marshal(rc)
+	err := rbtChannel.Publish(
+		"",
+		rc.QueueD.ReplyTo,
+		false,
+		false,
+		amqp.Publishing{
+			ContentType:   "text/plain",
+			CorrelationId: rc.QueueD.CorrelationId,
+			Body:          r,
+		},
+	)
+	if err != nil {
+		log.Printf("Не удалось отправить ответ: %s", err)
+	}
+	rc.QueueD.Ack(false)
+}
+
+func WaitCommands() {
+	for d := range rbtChannelMsgs {
+		fmt.Printf("Получена команда: %+v\n", string(d.Body))
+
+		cmdS := QueueCmd{}
+
+		err := json.Unmarshal(d.Body, &cmdS)
+
+		if err != nil {
+			d.Ack(false)
+			fmt.Println(err.Error())
+			return
+		}
+
+		fmt.Println(cmdS.CMD, cmdS.ImeiWithPrefix)
+
+		resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
+		cmd := cmdS.CMD
+		imei := resStr[1]
+		decImei, _ := strconv.Atoi(imei)
+
+		c := connections[int64(decImei)]
+
+		if c != nil {
+			token, _ := GenСmdTokenHex()
+			tokenBy := HexToBytes(token)
+			cmdBy := HexToBytes(cmd)
+
+			totalBy := make([]byte, 2)
+			totalBy = append(totalBy, tokenBy...)
+			totalBy = append(totalBy, cmdBy...)
+
+			cs := Checksum(totalBy)
+
+			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
+			sComPackage, _ := hex.DecodeString(command)
+
+			cmdInfo := commands[cmd]
+
+			if cmdInfo == nil {
+				// fmt.Fprintf(w, "this command does not exist %v", cmd)
+				return
+			}
+
+			recievedCmd := &ReceivedCommand{
+				ServerTime: time.Now().UnixMicro(),
+				CMD:        command,
+				Token:      token,
+				Status:     "pending",
+				IMEI:       imei,
+				CMDInfo:    commands[cmd],
+				QueueD:     d,
+			}
+
+			receivedCommands[token] = recievedCmd
+			mg.Insert(ctx, cmdsColl, recievedCmd)
+
+			c.Conn.Write(sComPackage)
+		}
+	}
+}
+
+var rbtChannel *amqp.Channel
+var rbtChannelMsgs <-chan amqp.Delivery
+
 var scooterColl *mongo.Collection
 var cmdsColl *mongo.Collection
 var ctx = context.TODO()
@@ -769,6 +857,22 @@ func main() {
 
 	scooterColl = mgClient.Database("iot").Collection("scooters")
 	cmdsColl = mgClient.Database("iot").Collection("cmds")
+
+	// rabbit init
+	rbtConn := rabbit.Conn()
+	defer rbtConn.Close()
+
+	rbtCh, err := rbtConn.Channel()
+	if err != nil {
+		log.Fatalf("Не удалось открыть канал: %s", err)
+	}
+	rbtChannel = rbtCh
+	defer rbtCh.Close()
+	rabbit.DeclareQueue(rbtCh, "arnavi_commands")
+	rbtChannelMsgs = rabbit.Consume(rbtCh, "arnavi_commands")
+	// end init rabbit
+
+	go WaitCommands()
 
 	serve, err := net.Listen("tcp", ":20550")
 

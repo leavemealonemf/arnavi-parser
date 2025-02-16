@@ -1,6 +1,10 @@
 package structs
 
-import "net"
+import (
+	"net"
+
+	amqp "github.com/rabbitmq/amqp091-go"
+)
 
 type Connection struct {
 	Conn   net.Conn
@@ -26,6 +30,7 @@ type ReceivedCommand struct {
 	Status        string   `json:"status" bson:"status,omitempty"`
 	IMEI          string   `json:"dvce_imei" bson:"dvce_imei,omitempty"`
 	CMDInfo       *Command `json:"cmd_info" bson:"cmd_info"`
+	QueueD        amqp.Delivery
 }
 
 type HEXHeader struct {
@@ -133,4 +138,9 @@ type Command struct {
 	Val    string `json:"cmd_hex" bson:"cmd_hex,omitempty"`
 	NameEn string `json:"name_en" bson:"name_en,omitempty"`
 	NameRu string `json:"name_ru" bson:"name_ru,omitempty"`
+}
+
+type QueueCmd struct {
+	CMD            string `json:"Cmd"`
+	ImeiWithPrefix string `json:"IMEI"`
 }
