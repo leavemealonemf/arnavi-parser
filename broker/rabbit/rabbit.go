@@ -38,7 +38,7 @@ func DeclareQueue(ch *amqp.Channel, queueName string) {
 func Consume(ch *amqp.Channel, queueName string) <-chan amqp.Delivery {
 	msgs, err := ch.Consume(
 		queueName, // Имя очереди
-		"",        // Consumer
+		"temp",    // Consumer
 		false,     // AutoAck
 		false,     // Exclusive
 		false,     // NoLocal
