@@ -815,7 +815,7 @@ func WaitCommands() {
 					},
 				)
 				d.Ack(false)
-				continue
+				return
 			}
 
 			recievedCmd := &ReceivedCommand{
