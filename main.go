@@ -10,7 +10,6 @@ import (
 	"log"
 	"math"
 	"net"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -22,13 +21,11 @@ import (
 
 	. "arnaviparser/protocols/arnavi"
 
-	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var devices []*Device
@@ -417,283 +414,6 @@ func printHexPacketStructData(packet *HEXPacket) {
 	fmt.Printf("type of content: %v\ndata len: %v\npacket unixtime: %v\npacket tags data: %v\nchecksum: %v\n\n", packet.TypeOfContent, packet.PacketDataLen, packet.Unixtime, packet.TagsData, packet.Checksum)
 }
 
-func HTTPCmdHandlerCustom(w http.ResponseWriter, r *http.Request) {
-	if r.Method == "GET" {
-		vars := mux.Vars(r)
-		imei := vars["imei"]
-		cmd := vars["cmd"]
-		decImei, _ := strconv.Atoi(imei)
-
-		c := connections[int64(decImei)]
-
-		if c != nil {
-			token, _ := GenСmdTokenHex()
-			tokenBy := HexToBytes(token)
-			cmdBy := HexToBytes(cmd)
-
-			totalBy := make([]byte, 2)
-			totalBy = append(totalBy, tokenBy...)
-			totalBy = append(totalBy, cmdBy...)
-
-			cs := Checksum(totalBy)
-
-			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
-			sComPackage, _ := hex.DecodeString(command)
-
-			cmdInfo := commands[cmd]
-
-			if cmdInfo == nil {
-				fmt.Fprintf(w, "this command does not exist %v", cmd)
-				return
-			}
-
-			recievedCmd := &ReceivedCommand{
-				ServerTime: time.Now().UnixMicro(),
-				CMD:        command,
-				Token:      token,
-				Status:     "pending",
-				IMEI:       imei,
-				CMDInfo:    commands[cmd],
-			}
-
-			receivedCommands[token] = recievedCmd
-			mg.Insert(ctx, cmdsColl, recievedCmd)
-
-			c.Conn.Write(sComPackage)
-		}
-
-		fmt.Fprintf(w, "success %v", imei)
-	}
-}
-
-func HTTPIotDataScooters(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	if r.Method == "GET" {
-
-		var response []IOTResponse
-
-		for _, v := range addedImeis {
-			var dvce *Device
-			var r IOTResponse
-			mg.FindOneWithOpts(
-				ctx, scooterColl,
-				bson.D{{Key: "imei", Value: v}},
-				options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
-			).Decode(&dvce)
-
-			if dvce == nil {
-				continue
-			}
-
-			r.ID = dvce.IMEI
-			r.State = dvce
-
-			response = append(response, r)
-		}
-
-		if len(response) == 0 {
-			fmt.Fprintln(w, "[]")
-			return
-		}
-
-		j, _ := json.Marshal(response)
-		fmt.Fprintln(w, string(j))
-	}
-}
-
-func HTTPIotFullDataForOneScooter(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	if r.Method == "GET" {
-		vars := mux.Vars(r)
-		imei := vars["imei"]
-
-		decImei, _ := strconv.Atoi(imei)
-		f := bson.D{{Key: "imei", Value: decImei}}
-
-		curr := mg.FindAllWithOpts(
-			ctx, scooterColl,
-			f,
-			options.Find().SetSort(bson.D{{Key: "_ts", Value: -1}}),
-		)
-
-		if curr == nil {
-			fmt.Fprintln(w, "[]")
-			return
-		}
-
-		var res []Device
-		curr.All(ctx, &res)
-
-		if len(res) == 0 {
-			fmt.Fprintln(w, "[]")
-			return
-		}
-
-		j, _ := json.Marshal(res)
-		fmt.Fprintln(w, string(j))
-	}
-}
-
-func HTTPIotLatestOneScooterData(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	if r.Method == "GET" {
-		vars := mux.Vars(r)
-		imei := vars["imei"]
-
-		decImei, _ := strconv.Atoi(imei)
-
-		var res Device
-		var rMap map[string]any
-
-		mg.FindOneWithOpts(
-			ctx, scooterColl,
-			bson.D{{Key: "imei", Value: decImei}},
-			options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
-		).Decode(&res)
-
-		rMap = map[string]any{
-			"id":    res.IMEI,
-			"state": res,
-		}
-
-		j, _ := json.Marshal(rMap)
-		fmt.Fprintln(w, string(j))
-	}
-}
-
-func HTTPIotLatestOneScooterDataWithCmdsJournal(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	if r.Method == "GET" {
-		vars := mux.Vars(r)
-		imei := vars["imei"]
-
-		decImei, _ := strconv.Atoi(imei)
-
-		var res Device
-		var cmds []ReceivedCommand
-
-		mg.FindOneWithOpts(
-			ctx, scooterColl,
-			bson.D{{Key: "imei", Value: decImei}},
-			options.FindOne().SetSort(bson.D{{Key: "_ts", Value: -1}}),
-		).Decode(&res)
-
-		f := bson.D{{Key: "dvce_imei", Value: imei}}
-
-		cmdsCurr := mg.FindAllWithOpts(ctx, cmdsColl, f, options.Find().SetSort(bson.D{{Key: "_ts", Value: -1}}))
-		err := cmdsCurr.All(ctx, &cmds)
-
-		if err != nil {
-			fmt.Println("Get commands journal err:", err.Error())
-		}
-
-		iotResp := IOTResponseJournal{
-			ID:         res.IMEI,
-			State:      &res,
-			CMDJournal: cmds,
-		}
-
-		j, _ := json.Marshal(iotResp)
-		fmt.Fprintln(w, string(j))
-	}
-}
-
-func HTTPIotOneScooterCmdsJournal(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "application/json")
-
-	if r.Method == "GET" {
-		vars := mux.Vars(r)
-		imei := vars["imei"]
-
-		var cmds []ReceivedCommand
-
-		f := bson.D{{Key: "dvce_imei", Value: imei}}
-
-		cmdsCurr := mg.FindAllWithOpts(ctx, cmdsColl, f, options.Find().SetSort(bson.D{{Key: "_ts", Value: -1}}))
-		err := cmdsCurr.All(ctx, &cmds)
-
-		if err != nil {
-			fmt.Println("Get commands journal err:", err.Error())
-			fmt.Fprintln(w, "[]")
-			return
-		}
-
-		j, _ := json.Marshal(cmds)
-		fmt.Fprintln(w, string(j))
-	}
-}
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-func PullToWS(w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		fmt.Println("Connect to WS err:", err.Error())
-		return
-	}
-
-	wsConnections = append(wsConnections, conn)
-
-	for {
-		_, _, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println("[WS] Read message error. Exit", err.Error())
-			break
-		}
-
-		// m := []byte("hello from iot king")
-
-		// conn.WriteMessage(websocket.TextMessage, m)
-		// go WSMessageHandler(m)
-	}
-
-	defer conn.Close()
-}
-
-func WSMessageHandler(msg []byte) {
-	fmt.Println(string(msg))
-}
-
-func secureMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		k, _ := os.LookupEnv("ACCESS_KEY")
-
-		authH := r.Header.Get("Authorization")
-
-		if len(authH) == 0 || strings.Compare(k, authH) != 0 {
-			w.WriteHeader(403)
-			fmt.Fprintf(w, "Unauthorized")
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func bootHTTP() {
-	r := mux.NewRouter()
-	// r.Use(secureMiddleware)
-	r.HandleFunc("/iot/ws", PullToWS)
-	r.HandleFunc("/cmds/{imei}/{cmd}", HTTPCmdHandlerCustom)
-	r.HandleFunc("/iot/scooters", HTTPIotDataScooters)
-	r.HandleFunc("/iot/scooters/{imei}/all", HTTPIotFullDataForOneScooter)
-	r.HandleFunc("/iot/scooters/{imei}/latest", HTTPIotLatestOneScooterData)
-	r.HandleFunc("/iot/scooters/{imei}/latest/journal", HTTPIotLatestOneScooterDataWithCmdsJournal)
-	r.HandleFunc("/iot/scooters/{imei}/cjournal", HTTPIotOneScooterCmdsJournal)
-	http.Handle("/", r)
-	fmt.Println("Served HTTP on :8080")
-
-	http.ListenAndServe(":8080", nil)
-}
-
 func initIOTCommands() {
 	commands = map[string]*Command{}
 	commands["51330001"] = &Command{
@@ -918,8 +638,6 @@ func main() {
 	}
 
 	log.Println("Server started:", serve.Addr().Network())
-
-	go bootHTTP()
 
 	for {
 		conn, err := serve.Accept()
