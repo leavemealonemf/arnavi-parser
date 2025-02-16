@@ -759,7 +759,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 	if err != nil {
 		log.Printf("Не удалось отправить ответ: %s", err)
 	}
-	rc.QueueD.Ack(false)
+	rc.QueueD.Ack(true)
 }
 
 func WaitCommands() {

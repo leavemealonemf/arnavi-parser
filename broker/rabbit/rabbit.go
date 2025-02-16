@@ -37,13 +37,13 @@ func DeclareQueue(ch *amqp.Channel, queueName string) {
 
 func Consume(ch *amqp.Channel, queueName string) <-chan amqp.Delivery {
 	msgs, err := ch.Consume(
-		"arnavi_commands", // Имя очереди
-		"",                // Consumer
-		false,             // AutoAck
-		false,             // Exclusive
-		false,             // NoLocal
-		false,             // NoWait
-		nil,               // Arguments
+		queueName, // Имя очереди
+		"",        // Consumer
+		false,     // AutoAck
+		false,     // Exclusive
+		false,     // NoLocal
+		false,     // NoWait
+		nil,       // Arguments
 	)
 	if err != nil {
 		log.Fatalf("Не удалось подписаться на очередь: %s", err)
