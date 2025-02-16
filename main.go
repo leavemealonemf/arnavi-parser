@@ -802,7 +802,18 @@ func WaitCommands() {
 			cmdInfo := commands[cmd]
 
 			if cmdInfo == nil {
-				// fmt.Fprintf(w, "this command does not exist %v", cmd)
+				msg := fmt.Sprintf("this command does not exist %s", cmd)
+				err = rbtChannel.Publish(
+					"",
+					"temp",
+					false,
+					false,
+					amqp.Publishing{
+						ContentType:   "text/plain",
+						CorrelationId: d.CorrelationId,
+						Body:          []byte(msg),
+					},
+				)
 				return
 			}
 
@@ -821,6 +832,18 @@ func WaitCommands() {
 
 			c.Conn.Write(sComPackage)
 		}
+		msg := fmt.Sprintf("device with imei %s not connected", imei)
+		err = rbtChannel.Publish(
+			"",
+			"temp",
+			false,
+			false,
+			amqp.Publishing{
+				ContentType:   "text/plain",
+				CorrelationId: d.CorrelationId,
+				Body:          []byte(msg),
+			},
+		)
 	}
 }
 
