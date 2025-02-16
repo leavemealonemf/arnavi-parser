@@ -747,7 +747,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 	r, _ := json.Marshal(rc)
 	err := rbtChannel.Publish(
 		"",
-		rc.QueueD.ReplyTo,
+		"temp",
 		false,
 		false,
 		amqp.Publishing{
