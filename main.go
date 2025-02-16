@@ -814,8 +814,8 @@ func WaitCommands() {
 						Body:          []byte(msg),
 					},
 				)
-				// d.Ack(false)
-				return
+				d.Ack(false)
+				continue
 			}
 
 			recievedCmd := &ReceivedCommand{
