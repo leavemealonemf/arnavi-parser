@@ -417,16 +417,16 @@ func printHexPacketStructData(packet *HEXPacket) {
 func initIOTCommands() {
 	commands = map[string]*Command{}
 	commands["51330001"] = &Command{
-		Val:    "51330001",
+		Val:    "engine-m1txq",
 		NameEn: "Block Scooter Motor Wheel",
 		NameRu: "Блокировка мотор колеса",
 	}
-	commands["51330000"] = &Command{
+	commands["unlock-tt3rm"] = &Command{
 		Val:    "51330000",
 		NameEn: "Disable Guard Mode",
 		NameRu: "Снять с режима охраны",
 	}
-	commands["51330005"] = &Command{
+	commands["lock-lyoqv"] = &Command{
 		Val:    "51330005",
 		NameEn: "Enable Guard Mode",
 		NameRu: "Установить режим охраны",
@@ -436,27 +436,27 @@ func initIOTCommands() {
 		NameEn: "Set Service Mode",
 		NameRu: "Установить режим сервиса",
 	}
-	commands["51330300"] = &Command{
+	commands["speed-mode-drive"] = &Command{
 		Val:    "51330300",
 		NameEn: "Set Drive Mode D",
 		NameRu: "Установить стиль езды D",
 	}
-	commands["51330301"] = &Command{
+	commands["speed-mode-eco"] = &Command{
 		Val:    "51330301",
 		NameEn: "Set Drive Mode ECO",
 		NameRu: "Установить стиль езды ECO",
 	}
-	commands["51330302"] = &Command{
+	commands["speed-mode-sport"] = &Command{
 		Val:    "51330302",
 		NameEn: "Set Drive Mode S",
 		NameRu: "Установить стиль езды S",
 	}
-	commands["51080201"] = &Command{
+	commands["lamp-xurbd"] = &Command{
 		Val:    "51080201",
 		NameEn: "Turn On Flash",
 		NameRu: "Включить фонарь",
 	}
-	commands["51080200"] = &Command{
+	commands["lamp-k2uex-umofv-0hpjw"] = &Command{
 		Val:    "51080200",
 		NameEn: "Turn Off Flash",
 		NameRu: "Выключить фонарь",
