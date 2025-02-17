@@ -553,21 +553,21 @@ func WaitCommands() {
 				mg.Insert(ctx, cmdsColl, recievedCmd)
 
 				c.Conn.Write(sComPackage)
+			} else {
+				msg := fmt.Sprintf("device with imei %s not connected", imei)
+				err = rbtChannel.Publish(
+					"",
+					"temp",
+					false,
+					false,
+					amqp.Publishing{
+						ContentType:   "text/plain",
+						CorrelationId: d.CorrelationId,
+						Body:          []byte(msg),
+					},
+				)
+				d.Ack(false)
 			}
-			msg := fmt.Sprintf("device with imei %s not connected", imei)
-			err = rbtChannel.Publish(
-				"",
-				"temp",
-				false,
-				false,
-				amqp.Publishing{
-					ContentType:   "text/plain",
-					CorrelationId: d.CorrelationId,
-					Body:          []byte(msg),
-				},
-			)
-
-			d.Ack(false)
 		}(d)
 	}
 }
