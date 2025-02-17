@@ -502,16 +502,6 @@ func WaitCommands() {
 
 		c := connections[int64(decImei)]
 		if c != nil {
-			token, _ := GenСmdTokenHex()
-			tokenBy := HexToBytes(token)
-			cmdBy := HexToBytes(cmd)
-
-			totalBy := make([]byte, 2)
-			totalBy = append(totalBy, tokenBy...)
-			totalBy = append(totalBy, cmdBy...)
-
-			cs := Checksum(totalBy)
-
 			cmdInfo := commands[cmd]
 
 			if cmdInfo == nil {
@@ -530,6 +520,16 @@ func WaitCommands() {
 				d.Ack(false)
 				return
 			}
+
+			token, _ := GenСmdTokenHex()
+			tokenBy := HexToBytes(token)
+			cmdBy := HexToBytes(cmdInfo.Val)
+
+			totalBy := make([]byte, 2)
+			totalBy = append(totalBy, tokenBy...)
+			totalBy = append(totalBy, cmdBy...)
+
+			cs := Checksum(totalBy)
 
 			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
 			sComPackage, _ := hex.DecodeString(command)
