@@ -505,7 +505,7 @@ func WaitCommands() {
 			decImei, _ := strconv.Atoi(imei)
 
 			c := connections[int64(decImei)]
-
+			fmt.Println("connection:", c)
 			if c != nil {
 				token, _ := GenСmdTokenHex()
 				tokenBy := HexToBytes(token)
