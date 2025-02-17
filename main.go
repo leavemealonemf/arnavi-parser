@@ -436,17 +436,17 @@ func initIOTCommands() {
 		NameEn: "Set Service Mode",
 		NameRu: "Установить режим сервиса",
 	}
-	commands["speed-mode-drive"] = &Command{
+	commands["speed-mode-4i6ku"] = &Command{
 		Val:    "51330300",
 		NameEn: "Set Drive Mode D",
 		NameRu: "Установить стиль езды D",
 	}
-	commands["speed-mode-eco"] = &Command{
+	commands["speed-mode-72fcz"] = &Command{
 		Val:    "51330301",
 		NameEn: "Set Drive Mode ECO",
 		NameRu: "Установить стиль езды ECO",
 	}
-	commands["speed-mode-sport"] = &Command{
+	commands["speed-mode-uohen"] = &Command{
 		Val:    "51330302",
 		NameEn: "Set Drive Mode S",
 		NameRu: "Установить стиль езды S",
