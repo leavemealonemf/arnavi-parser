@@ -567,6 +567,7 @@ func WaitCommands() {
 		)
 
 		d.Ack(false)
+		continue
 	}
 }
 
