@@ -461,6 +461,32 @@ func initIOTCommands() {
 		NameEn: "Turn Off Flash",
 		NameRu: "Выключить фонарь",
 	}
+	// speed
+	commands["speed-limit-norm-jxl0w"] = &Command{
+		Val:    "51330405",
+		NameEn: "Speed Limit 5 km/h",
+		NameRu: "Ограничение скорости 5 км/ч",
+	}
+	commands["speed-limit-norm-cd8mx"] = &Command{
+		Val:    "5133040A",
+		NameEn: "Speed Limit 10 km/h",
+		NameRu: "Ограничение скорости 10 км/ч",
+	}
+	commands["speed-limit-norm-7s2eo"] = &Command{
+		Val:    "5133040F",
+		NameEn: "Speed Limit 15 km/h",
+		NameRu: "Ограничение скорости 15 км/ч",
+	}
+	commands["speed-limit-norm-ldzq6"] = &Command{
+		Val:    "51330414",
+		NameEn: "Speed Limit 20 km/h",
+		NameRu: "Ограничение скорости 20 км/ч",
+	}
+	commands["speed-limit-norm-gyjf3"] = &Command{
+		Val:    "51330419",
+		NameEn: "Speed Limit 25 km/h",
+		NameRu: "Ограничение скорости 25 км/ч",
+	}
 }
 
 func AcceptCommand(rc *ReceivedCommand) {
