@@ -416,8 +416,8 @@ func printHexPacketStructData(packet *HEXPacket) {
 
 func initIOTCommands() {
 	commands = map[string]*Command{}
-	commands["51330001"] = &Command{
-		Val:    "engine-m1txq",
+	commands["engine-m1txq"] = &Command{
+		Val:    "51330001",
 		NameEn: "Block Scooter Motor Wheel",
 		NameRu: "Блокировка мотор колеса",
 	}
