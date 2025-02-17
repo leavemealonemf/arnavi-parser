@@ -479,6 +479,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 	if err != nil {
 		log.Printf("Не удалось отправить ответ: %s", err)
 	}
+	rc.QueueD.Ack(false)
 }
 
 func WaitCommands() {
@@ -546,7 +547,6 @@ func WaitCommands() {
 
 			receivedCommands[token] = recievedCmd
 			mg.Insert(ctx, cmdsColl, recievedCmd)
-			d.Ack(false)
 			c.Conn.Write(sComPackage)
 		} else {
 			msg := fmt.Sprintf("device with imei %s not connected", imei)
