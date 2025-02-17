@@ -497,8 +497,6 @@ func WaitCommands() {
 				return
 			}
 
-			fmt.Println(cmdS.CMD, cmdS.ImeiWithPrefix)
-
 			resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
 			cmd := cmdS.CMD
 			imei := resStr[1]
@@ -516,9 +514,6 @@ func WaitCommands() {
 				totalBy = append(totalBy, cmdBy...)
 
 				cs := Checksum(totalBy)
-
-				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmd)
-				sComPackage, _ := hex.DecodeString(command)
 
 				cmdInfo := commands[cmd]
 
@@ -538,6 +533,9 @@ func WaitCommands() {
 					d.Ack(false)
 					return
 				}
+
+				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
+				sComPackage, _ := hex.DecodeString(command)
 
 				recievedCmd := &ReceivedCommand{
 					ServerTime: time.Now().UnixMicro(),
