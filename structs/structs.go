@@ -137,6 +137,8 @@ type Device struct {
 	AdditionalCharge uint8             `json:"additional_charge" bson:"additional_charge"`
 	DriveMode        uint8             `json:"drive_mode" bson:"drive_mode"`
 	VsErrCode        uint8             `json:"vs_err_code" bson:"vs_err_code"`
+	Ignition         bool              `json:"ignition" bson:"ignition"`
+	ScreenOff        bool              `json:"screen_off" bson:"screen_off"`
 }
 
 type Command struct {

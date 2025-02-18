@@ -402,6 +402,8 @@ func BindDeviceMainPropertys(device *Device) {
 	device.AdditionalCharge = device.VirtualSensors.AdditionalBatteryCharge
 	device.DriveMode = device.VirtualSensors.StatementFlags.Mode
 	device.VsErrCode = device.VirtualSensors.ErrorCode
+	device.ScreenOff = device.VirtualSensors.StatementFlags.ScreenOff
+	device.Ignition = device.VirtualSensors.StatementFlags.MotorRunning
 }
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
