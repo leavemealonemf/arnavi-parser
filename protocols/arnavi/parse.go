@@ -70,14 +70,14 @@ func DecodeVSStatementFlags(hexStr string, device *Device) {
 	pedestrianMode := byte0&0x20 != 0
 	overheat := byte0&0x80 != 0
 
-	modes := map[byte]string{
-		0b00: "D",
-		0b01: "ECO",
-		0b10: "S",
-	}
+	//modes := map[byte]string{
+	//	0b00: "D",
+	//	0b01: "ECO",
+	//	0b10: "S",
+	//}
 
 	device.VirtualSensors.StatementFlags.MotorRunning = motorRunning
-	device.VirtualSensors.StatementFlags.Mode = modes[mode]
+	device.VirtualSensors.StatementFlags.Mode = mode
 	device.VirtualSensors.StatementFlags.Charging = charging
 	device.VirtualSensors.StatementFlags.ScreenOff = screenOff
 	device.VirtualSensors.StatementFlags.PedestrianMode = pedestrianMode

@@ -375,7 +375,6 @@ func handleServe(conn net.Conn) {
 func BindDeviceMainPropertys(device *Device) {
 	device.Charge = device.VirtualSensors.MainBatteryCharge
 	device.Speed = device.VirtualSensors.SpeedKMH
-	device.MoveSensor = device.DeviceStatus2["mw"] == 1
 	device.SimNumber = uint8(device.DeviceStatus2["sim_t"])
 	device.GPS = uint8(device.DeviceStatus2["nav_st"])
 	device.GSM = uint8(device.DeviceStatus2["gsm_st"])
@@ -386,6 +385,23 @@ func BindDeviceMainPropertys(device *Device) {
 	} else {
 		device.IsSim = device.DeviceStatus2["sim2_st"] == 1
 	}
+
+	if device.DeviceStatus1 != nil {
+		// tag_9
+		device.MoveSensor = device.DeviceStatus1["mw"] == 1
+	} else {
+		// tag_99
+		device.MoveSensor = device.DeviceStatus2["mw"] == 1
+	}
+
+	if device.TagSix != nil {
+		device.Alarm = device.TagSix["alarm_st"] == 1
+	}
+
+	device.AverageCharge = device.VirtualSensors.AverageBatteryCharge
+	device.AdditionalCharge = device.VirtualSensors.AdditionalBatteryCharge
+	device.DriveMode = device.VirtualSensors.StatementFlags.Mode
+	device.VsErrCode = device.VirtualSensors.ErrorCode
 }
 
 func sendServerComSuccessed(codeLine string, conn net.Conn) {
