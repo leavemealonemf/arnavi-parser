@@ -120,7 +120,7 @@ type Device struct {
 	TotalSatellites  byte              `json:"total_sat" bson:"total_sat,omitempty"`       // tag_5 (binded)
 	GPS              uint8             `json:"gps" bson:"gps,omitempty"`                   // tag_99 [nav_st] aka self.DeviceStatus["nav_st"] (binded)
 	GSM              uint8             `json:"gsm" bson:"gsm,omitempty"`                   // tag_99 [gsm_st] aka self.DeviceStatus["gsm_st"] (binded)
-	LockStatus       bool              `json:"lock-status" bson:"lock-status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
+	LockStatus       bool              `json:"lock_status" bson:"lock_status,omitempty"`   // tag_99 [device_status] aka self.DeviceStatus["device_status"] (binded)
 	Charging         bool              `json:"charging" bson:"charging,omitempty"`         // vs_63 [device_status] aka self.VirtualSensors.StatementFlags.Charging (binded)
 	Mnc              uint32            `json:"mnc" bson:"mnc,omitempty"`                   // tag_7 cellID
 	DeviceStatus2    map[string]int    `json:"tag_99" bson:"tag_99,omitempty"`
