@@ -138,7 +138,7 @@ func handleServe(conn net.Conn) {
 					start += 4 // skip len
 
 					hexPacket.Unixtime = hexPackageData[start : start+8]
-					timestamp := HexToDec(BytesToHexString(ReverseBytes(hexPacket.Unixtime)))
+					timestamp := HexToDec(BytesToHexString(ReverseBytes(hexPacket.Unixtime))) * 1000
 					device.Timestamp = timestamp
 
 					start += 8 // skip ts
