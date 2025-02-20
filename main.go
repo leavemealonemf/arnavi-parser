@@ -534,7 +534,7 @@ func initIOTCommands() {
 	}
 
 	commands["beeper-j5shv"] = &Command{
-		Val:    "511803000A",
+		Val:    "1803000A",
 		NameEn: "Найти самокат",
 		NameRu: "Найти самокат",
 	}
