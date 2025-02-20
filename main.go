@@ -106,12 +106,13 @@ func handleServe(conn net.Conn) {
 			}
 
 			decIMEI := ParseIMEI(header.IMEI)
+			stringImei := strconv.Itoa(int(decIMEI))
 			// isFindImei := false
 
 			// // VALIDATE IMEI IN DATABASE
 			var rowImei string
 
-			err := db.QueryRow("SELECT \"deviceIMEI\" FROM \"Scooter\" WHERE \"deviceIMEI\" = $1", "arnavi3:"+header.IMEI).Scan(&rowImei)
+			err := db.QueryRow("SELECT \"deviceIMEI\" FROM \"Scooter\" WHERE \"deviceIMEI\" = $1", "arnavi3:"+stringImei).Scan(&rowImei)
 			if err != nil {
 				break
 			}
