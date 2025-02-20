@@ -532,6 +532,12 @@ func initIOTCommands() {
 		NameEn: "Speed Limit 25 km/h",
 		NameRu: "Ограничение скорости 25 км/ч",
 	}
+
+	commands["beeper-j5shv"] = &Command{
+		Val:    "511803000A",
+		NameEn: "Найти самокат",
+		NameRu: "Найти самокат",
+	}
 }
 
 func AcceptCommand(rc *ReceivedCommand) {
