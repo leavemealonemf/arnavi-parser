@@ -79,3 +79,12 @@ func UpdOne(ctx context.Context, col *mongo.Collection, f interface{}, upd inter
 
 	return result
 }
+
+func UpdOneScooter(ctx context.Context, col *mongo.Collection, f interface{}, upd interface{}, opts *options.FindOneAndUpdateOptions) {
+	result := col.FindOneAndUpdate(ctx, f, upd, opts)
+	if result.Err() != nil {
+		log.Printf("Failed to update scooter: %v", result.Err())
+	} else {
+		log.Println("Successfully updated the latest scooter by timestamp")
+	}
+}

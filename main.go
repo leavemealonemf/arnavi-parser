@@ -4,6 +4,7 @@ import (
 	"arnaviparser/broker/rabbit"
 	. "arnaviparser/structs"
 	"context"
+	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"time"
 
 	mg "arnaviparser/db/mongo"
+	"arnaviparser/db/mongo/pg"
 
 	. "arnaviparser/common/utils"
 
@@ -26,6 +28,7 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var devices []*Device
@@ -37,6 +40,7 @@ var commands map[string]*Command
 var receivedCommands map[string]*ReceivedCommand
 var addedImeis []int64
 var wsConnections []*websocket.Conn
+var db *sql.DB
 
 const (
 	tcpMsgBuff = 5000
@@ -104,6 +108,14 @@ func handleServe(conn net.Conn) {
 			// isFindImei := false
 
 			// // VALIDATE IMEI IN DATABASE
+			var rowImei string
+
+			err := db.QueryRow("SELECT \"deviceIMEI\" FROM \"Scooter\" WHERE \"deviceIMEI\" = $1", "arnavi3:"+header.IMEI).Scan(&rowImei)
+			if err != nil {
+				break
+			}
+
+			fmt.Println("In db. Continue...")
 
 			// // END VALIDATE IMEI IN DATABASE
 
@@ -420,6 +432,19 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 
 func AbortTCPDeviceConn(conn *Connection) {
 	if connections[conn.Device.IMEI] != nil {
+		filter := bson.D{
+			{Key: "imei", Value: conn.Device.IMEI},
+		}
+
+		update := bson.D{
+			{"$set", bson.D{
+				{Key: "online", Value: false},
+			}},
+		}
+
+		opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
+		mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
+
 		delete(connections, conn.Device.IMEI)
 	}
 }
@@ -626,6 +651,9 @@ func init() {
 }
 
 func main() {
+	db = pg.ConnectPG()
+	defer db.Close()
+
 	mongUsr, _ := os.LookupEnv("MONGO_USR")
 	mongPass, _ := os.LookupEnv("MONGO_PASSWORD")
 	mongHost, _ := os.LookupEnv("MONGO_HOST")

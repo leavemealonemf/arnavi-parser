@@ -4,6 +4,8 @@ go 1.23.5
 
 require go.mongodb.org/mongo-driver v1.17.2
 
+require github.com/lib/pq v1.10.9 // indirect
+
 require (
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/gorilla/mux v1.8.1 // indirect
