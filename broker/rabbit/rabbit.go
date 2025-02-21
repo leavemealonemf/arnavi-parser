@@ -24,7 +24,7 @@ func DeclareQueue(ch *amqp.Channel, queueName string) {
 	// Объявляем очередь для команд
 	_, err := ch.QueueDeclare(
 		queueName, // Имя очереди
-		true,      // Durable
+		false,     // Durable
 		false,     // Delete when unused
 		false,     // Exclusive
 		false,     // NoWait
