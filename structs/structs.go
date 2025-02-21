@@ -31,6 +31,7 @@ type ReceivedCommand struct {
 	IMEI          string        `json:"dvce_imei" bson:"dvce_imei,omitempty"`
 	CMDInfo       *Command      `json:"cmd_info" bson:"cmd_info"`
 	QueueD        amqp.Delivery `json:"-" bson:"-"`
+	ExecChannel   chan bool     `json:"-" bson:"-"`
 }
 
 type HEXHeader struct {

@@ -1,16 +1,17 @@
 package main
 
 import (
-	"arnaviparser/broker/rabbit"
 	. "arnaviparser/structs"
 	"context"
 	"database/sql"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"math"
 	"net"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
@@ -23,10 +24,11 @@ import (
 
 	. "arnaviparser/protocols/arnavi"
 
+	"github.com/gorilla/mux"
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	amqp "github.com/rabbitmq/amqp091-go"
+	"github.com/rs/cors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -346,7 +348,7 @@ func handleServe(conn net.Conn) {
 					mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
 
-					AcceptCommand(receivedCommand)
+					receivedCommand.ExecChannel <- true
 					// delete(receivedCommands, token)
 
 					break
@@ -539,114 +541,6 @@ func initIOTCommands() {
 	}
 }
 
-func AcceptCommand(rc *ReceivedCommand) {
-	r, _ := json.Marshal(rc)
-	err := rbtChannel.Publish(
-		"",
-		"temp",
-		false,
-		false,
-		amqp.Publishing{
-			ContentType:   "text/plain",
-			CorrelationId: rc.QueueD.CorrelationId,
-			Body:          r,
-		},
-	)
-	if err != nil {
-		log.Printf("Не удалось отправить ответ: %s", err)
-	}
-	rc.QueueD.Ack(false)
-}
-
-func WaitCommands() {
-	for d := range rbtChannelMsgs {
-		go func(d amqp.Delivery) {
-			fmt.Printf("Получена команда: %+v\n", string(d.Body))
-
-			cmdS := QueueCmd{}
-
-			err := json.Unmarshal(d.Body, &cmdS)
-
-			if err != nil {
-				d.Ack(false)
-				fmt.Println(err.Error())
-				return
-			}
-
-			resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
-			cmd := cmdS.CMD
-			imei := resStr[1]
-			decImei, _ := strconv.Atoi(imei)
-
-			c := connections[int64(decImei)]
-			if c != nil {
-				cmdInfo := commands[cmd]
-
-				if cmdInfo == nil {
-					msg := fmt.Sprintf("this command does not exist %s", cmd)
-					err = rbtChannel.Publish(
-						"",
-						"temp",
-						false,
-						false,
-						amqp.Publishing{
-							ContentType:   "text/plain",
-							CorrelationId: d.CorrelationId,
-							Body:          []byte(msg),
-						},
-					)
-					d.Ack(false)
-					return
-				}
-
-				token, _ := GenСmdTokenHex()
-				tokenBy := HexToBytes(token)
-				cmdBy := HexToBytes(cmdInfo.Val)
-
-				totalBy := make([]byte, 2)
-				totalBy = append(totalBy, tokenBy...)
-				totalBy = append(totalBy, cmdBy...)
-
-				cs := Checksum(totalBy)
-
-				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
-				sComPackage, _ := hex.DecodeString(command)
-
-				recievedCmd := &ReceivedCommand{
-					ServerTime: time.Now().UnixMicro(),
-					CMD:        command,
-					Token:      token,
-					Status:     "pending",
-					IMEI:       imei,
-					CMDInfo:    commands[cmd],
-					QueueD:     d,
-				}
-
-				receivedCommands[token] = recievedCmd
-				mg.Insert(ctx, cmdsColl, recievedCmd)
-				c.Conn.Write(sComPackage)
-			} else {
-				msg := fmt.Sprintf("device with imei %s not connected", imei)
-				err = rbtChannel.Publish(
-					"",
-					"temp",
-					false,
-					false,
-					amqp.Publishing{
-						ContentType:   "text/plain",
-						CorrelationId: d.CorrelationId,
-						Body:          []byte(msg),
-					},
-				)
-				d.Ack(false)
-			}
-		}(d)
-	}
-}
-
-var rbtChannel *amqp.Channel
-var rbtChannelMsgs <-chan amqp.Delivery
-
 var scooterColl *mongo.Collection
 var cmdsColl *mongo.Collection
 var ctx = context.TODO()
@@ -655,6 +549,112 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatalln("No .env file found. Exit")
 	}
+}
+
+func HTTPCommandHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		body, err := io.ReadAll(r.Body)
+
+		if err != nil {
+			http.Error(w, "failed to read bytes", 400)
+		}
+
+		var cmdS QueueCmd
+		err = json.Unmarshal(body, &cmdS)
+		if err != nil {
+			http.Error(w, "Failed to parse JSON response", http.StatusInternalServerError)
+			return
+		}
+
+		resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
+		cmd := cmdS.CMD
+		imei := resStr[1]
+		decImei, _ := strconv.Atoi(imei)
+
+		c := connections[int64(decImei)]
+		if c != nil {
+			cmdInfo := commands[cmd]
+
+			if cmdInfo == nil {
+				// msg := fmt.Sprintf("this command does not exist %s", cmd)
+				w.WriteHeader(404)
+				w.Write([]byte("this command does not exist"))
+				return
+			}
+
+			token, _ := GenСmdTokenHex()
+			tokenBy := HexToBytes(token)
+			cmdBy := HexToBytes(cmdInfo.Val)
+
+			totalBy := make([]byte, 2)
+			totalBy = append(totalBy, tokenBy...)
+			totalBy = append(totalBy, cmdBy...)
+
+			cs := Checksum(totalBy)
+
+			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
+			sComPackage, _ := hex.DecodeString(command)
+			cmdChan := make(chan bool)
+
+			recievedCmd := &ReceivedCommand{
+				ServerTime:  time.Now().UnixMicro(),
+				CMD:         command,
+				Token:       token,
+				Status:      "pending",
+				IMEI:        imei,
+				CMDInfo:     commands[cmd],
+				ExecChannel: cmdChan,
+			}
+
+			receivedCommands[token] = recievedCmd
+			mg.Insert(ctx, cmdsColl, recievedCmd)
+			c.Conn.Write(sComPackage)
+
+			select {
+			case success := <-cmdChan:
+				if success {
+					w.Write([]byte(fmt.Sprintf("Command %s executed successfully", cmd)))
+					delete(receivedCommands, token)
+				} else {
+					http.Error(w, "Command execution failed", http.StatusInternalServerError)
+					delete(receivedCommands, token)
+				}
+			case <-time.After(60 * time.Second):
+				http.Error(w, "Command execution timed out", http.StatusRequestTimeout)
+				delete(receivedCommands, token)
+			}
+
+		} else {
+			w.WriteHeader(404)
+			w.Write([]byte("device not connected"))
+		}
+	}
+
+}
+
+func initHttp() {
+	r := mux.NewRouter()
+
+	r.HandleFunc("/cmd", HTTPCommandHandler)
+
+	addr := fmt.Sprintf("0.0.0.0:%d", 9921)
+
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{"*"},
+		AllowCredentials: true,
+	})
+
+	handler := c.Handler(r)
+
+	srv := &http.Server{
+		Handler:      handler,
+		Addr:         addr,
+		WriteTimeout: 60 * time.Second,
+		ReadTimeout:  60 * time.Second,
+	}
+
+	fmt.Printf("http server up on :%d\n", 9921)
+	log.Fatal(srv.ListenAndServe())
 }
 
 func main() {
@@ -681,21 +681,7 @@ func main() {
 	scooterColl = mgClient.Database("iot").Collection("scooters")
 	cmdsColl = mgClient.Database("iot").Collection("cmds")
 
-	// rabbit init
-	rbtConn := rabbit.Conn()
-	defer rbtConn.Close()
-
-	rbtCh, err := rbtConn.Channel()
-	if err != nil {
-		log.Fatalf("Не удалось открыть канал: %s", err)
-	}
-	rbtChannel = rbtCh
-	defer rbtCh.Close()
-	rabbit.DeclareQueue(rbtCh, "arnavi_commands")
-	rbtChannelMsgs = rabbit.Consume(rbtCh, "arnavi_commands")
-	// end init rabbit
-
-	go WaitCommands()
+	go initHttp()
 
 	serve, err := net.Listen("tcp", ":20550")
 
