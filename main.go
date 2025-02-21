@@ -544,7 +544,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 	r, _ := json.Marshal(rc)
 	err := rbtChannel.Publish(
 		"",
-		rc.QueueD.RoutingKey,
+		rc.QueueD.ReplyTo,
 		false,
 		false,
 		amqp.Publishing{
@@ -589,7 +589,7 @@ func WaitCommands() {
 					msg := fmt.Sprintf("this command does not exist %s", cmd)
 					err = rbtChannel.Publish(
 						"",
-						d.RoutingKey,
+						d.ReplyTo,
 						false,
 						false,
 						amqp.Publishing{
@@ -632,7 +632,7 @@ func WaitCommands() {
 				msg := fmt.Sprintf("device with imei %s not connected", imei)
 				err = rbtChannel.Publish(
 					"",
-					d.RoutingKey,
+					d.ReplyTo,
 					false,
 					false,
 					amqp.Publishing{
