@@ -347,8 +347,8 @@ func handleServe(conn net.Conn) {
 					fmt.Println(pktType, errCode, token, cs)
 
 					AcceptCommand(receivedCommand)
-					time.Sleep(100 * time.Millisecond)
-					delete(receivedCommands, token)
+					// time.Sleep(100 * time.Millisecond)
+					// delete(receivedCommands, token)
 
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
