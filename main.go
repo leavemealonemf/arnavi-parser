@@ -70,7 +70,7 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		// fmt.Println("Received msg:", hexPackageData)
+		fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
 			// check data is header
@@ -176,7 +176,7 @@ func handleServe(conn net.Conn) {
 						}
 
 						tagIDDec := HexToDec(string(hexPacket.TagsData[i : i+2]))
-						// tagFull := hexPacket.TagsData[i : i+10]
+						tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
@@ -293,11 +293,11 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						// fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
-						// fmt.Println("--------------------")
+						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
+						fmt.Println("--------------------")
 					}
 
-					// printHexPacketStructData(hexPacket)
+					printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
 						// sendServerComSuccessed("506", conn)
@@ -335,19 +335,18 @@ func handleServe(conn net.Conn) {
 						receivedCommand.Status = "error"
 					}
 
-					// f := bson.D{{Key: "token", Value: token}}
+					f := bson.D{{Key: "token", Value: token}}
 
-					// upd := bson.D{
-					// 	{"$set", bson.D{
-					// 		{Key: "status", Value: receivedCommand.Status},
-					// 		{Key: "_ct", Value: time.Now().UnixMicro()},
-					// 	}},
-					// }
-					// mg.UpdOne(ctx, cmdsColl, f, upd)
+					upd := bson.D{
+						{"$set", bson.D{
+							{Key: "status", Value: receivedCommand.Status},
+							{Key: "_ct", Value: time.Now().UnixMicro()},
+						}},
+					}
+					mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
 
 					AcceptCommand(receivedCommand)
-					// time.Sleep(100 * time.Millisecond)
 					// delete(receivedCommands, token)
 
 					break
@@ -371,8 +370,8 @@ func handleServe(conn net.Conn) {
 			device.ServerTime = time.Now().UnixMicro()
 			BindDeviceMainPropertys(&device)
 			device.Online = true
-			// marshal, _ := json.Marshal(device)
-			// fmt.Println(string(marshal))
+			marshal, _ := json.Marshal(device)
+			fmt.Println(string(marshal))
 			for _, v := range wsConnections {
 				v.WriteJSON(device)
 			}
@@ -544,7 +543,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 	r, _ := json.Marshal(rc)
 	err := rbtChannel.Publish(
 		"",
-		rc.QueueD.ReplyTo,
+		"temp",
 		false,
 		false,
 		amqp.Publishing{
@@ -553,8 +552,6 @@ func AcceptCommand(rc *ReceivedCommand) {
 			Body:          r,
 		},
 	)
-	log.Printf("Отправляем ответ с CorrelationId: %s", rc.QueueD.CorrelationId)
-	log.Printf("Token: %s", rc.Token)
 	if err != nil {
 		log.Printf("Не удалось отправить ответ: %s", err)
 	}
@@ -589,7 +586,7 @@ func WaitCommands() {
 					msg := fmt.Sprintf("this command does not exist %s", cmd)
 					err = rbtChannel.Publish(
 						"",
-						d.ReplyTo,
+						"temp",
 						false,
 						false,
 						amqp.Publishing{
@@ -632,7 +629,7 @@ func WaitCommands() {
 				msg := fmt.Sprintf("device with imei %s not connected", imei)
 				err = rbtChannel.Publish(
 					"",
-					d.ReplyTo,
+					"temp",
 					false,
 					false,
 					amqp.Publishing{

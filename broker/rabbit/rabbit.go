@@ -23,12 +23,12 @@ func Conn() *amqp.Connection {
 func DeclareQueue(ch *amqp.Channel, queueName string) {
 	// Объявляем очередь для команд
 	_, err := ch.QueueDeclare(
-		"arnavi_commands", // Имя очереди
-		false,             // Durable
-		true,              // Delete when unused
-		false,             // Exclusive
-		false,             // NoWait
-		nil,               // Arguments
+		queueName, // Имя очереди
+		false,     // Durable
+		false,     // Delete when unused
+		false,     // Exclusive
+		false,     // NoWait
+		nil,       // Arguments
 	)
 	if err != nil {
 		log.Fatalf("Не удалось создать очередь: %s", err)
@@ -37,13 +37,13 @@ func DeclareQueue(ch *amqp.Channel, queueName string) {
 
 func Consume(ch *amqp.Channel, queueName string) <-chan amqp.Delivery {
 	msgs, err := ch.Consume(
-		"arnavi_commands", // Имя очереди
-		"",                // Consumer
-		true,              // AutoAck
-		false,             // Exclusive
-		false,             // NoLocal
-		false,             // NoWait
-		nil,               // Arguments
+		queueName, // Имя очереди
+		"temp",    // Consumer
+		false,     // AutoAck
+		false,     // Exclusive
+		false,     // NoLocal
+		false,     // NoWait
+		nil,       // Arguments
 	)
 	if err != nil {
 		log.Fatalf("Не удалось подписаться на очередь: %s", err)
