@@ -70,7 +70,7 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		fmt.Println("Received msg:", hexPackageData)
+		// fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
 			// check data is header
@@ -176,7 +176,7 @@ func handleServe(conn net.Conn) {
 						}
 
 						tagIDDec := HexToDec(string(hexPacket.TagsData[i : i+2]))
-						tagFull := hexPacket.TagsData[i : i+10]
+						// tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
@@ -293,11 +293,11 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
-						fmt.Println("--------------------")
+						// fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
+						// fmt.Println("--------------------")
 					}
 
-					printHexPacketStructData(hexPacket)
+					// printHexPacketStructData(hexPacket)
 
 					if hexPackageData[start:start+2] == "5d" {
 						// sendServerComSuccessed("506", conn)
@@ -335,15 +335,15 @@ func handleServe(conn net.Conn) {
 						receivedCommand.Status = "error"
 					}
 
-					f := bson.D{{Key: "token", Value: token}}
+					// f := bson.D{{Key: "token", Value: token}}
 
-					upd := bson.D{
-						{"$set", bson.D{
-							{Key: "status", Value: receivedCommand.Status},
-							{Key: "_ct", Value: time.Now().UnixMicro()},
-						}},
-					}
-					mg.UpdOne(ctx, cmdsColl, f, upd)
+					// upd := bson.D{
+					// 	{"$set", bson.D{
+					// 		{Key: "status", Value: receivedCommand.Status},
+					// 		{Key: "_ct", Value: time.Now().UnixMicro()},
+					// 	}},
+					// }
+					// mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
 
 					AcceptCommand(receivedCommand)
@@ -554,6 +554,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 		},
 	)
 	log.Printf("Отправляем ответ с CorrelationId: %s", rc.QueueD.CorrelationId)
+	log.Printf("Token: %s", rc.Token)
 	if err != nil {
 		log.Printf("Не удалось отправить ответ: %s", err)
 	}
@@ -562,73 +563,30 @@ func AcceptCommand(rc *ReceivedCommand) {
 
 func WaitCommands() {
 	for d := range rbtChannelMsgs {
-		go func(d amqp.Delivery) {
-			fmt.Printf("Получена команда: %+v\n", string(d.Body))
 
-			cmdS := QueueCmd{}
+		fmt.Printf("Получена команда: %+v\n", string(d.Body))
 
-			err := json.Unmarshal(d.Body, &cmdS)
+		cmdS := QueueCmd{}
 
-			if err != nil {
-				d.Ack(false)
-				fmt.Println(err.Error())
-				return
-			}
+		err := json.Unmarshal(d.Body, &cmdS)
 
-			resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
-			cmd := cmdS.CMD
-			imei := resStr[1]
-			decImei, _ := strconv.Atoi(imei)
+		if err != nil {
+			d.Ack(false)
+			fmt.Println(err.Error())
+			return
+		}
 
-			c := connections[int64(decImei)]
-			if c != nil {
-				cmdInfo := commands[cmd]
+		resStr := strings.Split(cmdS.ImeiWithPrefix, ":")
+		cmd := cmdS.CMD
+		imei := resStr[1]
+		decImei, _ := strconv.Atoi(imei)
 
-				if cmdInfo == nil {
-					msg := fmt.Sprintf("this command does not exist %s", cmd)
-					err = rbtChannel.Publish(
-						"",
-						"temp",
-						false,
-						false,
-						amqp.Publishing{
-							ContentType:   "text/plain",
-							CorrelationId: d.CorrelationId,
-							Body:          []byte(msg),
-						},
-					)
-					d.Ack(false)
-					return
-				}
+		c := connections[int64(decImei)]
+		if c != nil {
+			cmdInfo := commands[cmd]
 
-				token, _ := GenСmdTokenHex()
-				tokenBy := HexToBytes(token)
-				cmdBy := HexToBytes(cmdInfo.Val)
-
-				totalBy := make([]byte, 2)
-				totalBy = append(totalBy, tokenBy...)
-				totalBy = append(totalBy, cmdBy...)
-
-				cs := Checksum(totalBy)
-
-				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
-				sComPackage, _ := hex.DecodeString(command)
-
-				recievedCmd := &ReceivedCommand{
-					ServerTime: time.Now().UnixMicro(),
-					CMD:        command,
-					Token:      token,
-					Status:     "pending",
-					IMEI:       imei,
-					CMDInfo:    commands[cmd],
-					QueueD:     d,
-				}
-
-				receivedCommands[token] = recievedCmd
-				mg.Insert(ctx, cmdsColl, recievedCmd)
-				c.Conn.Write(sComPackage)
-			} else {
-				msg := fmt.Sprintf("device with imei %s not connected", imei)
+			if cmdInfo == nil {
+				msg := fmt.Sprintf("this command does not exist %s", cmd)
 				err = rbtChannel.Publish(
 					"",
 					"temp",
@@ -641,8 +599,51 @@ func WaitCommands() {
 					},
 				)
 				d.Ack(false)
+				continue
 			}
-		}(d)
+
+			token, _ := GenСmdTokenHex()
+			tokenBy := HexToBytes(token)
+			cmdBy := HexToBytes(cmdInfo.Val)
+
+			totalBy := make([]byte, 2)
+			totalBy = append(totalBy, tokenBy...)
+			totalBy = append(totalBy, cmdBy...)
+
+			cs := Checksum(totalBy)
+
+			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
+			sComPackage, _ := hex.DecodeString(command)
+
+			recievedCmd := &ReceivedCommand{
+				ServerTime: time.Now().UnixMicro(),
+				CMD:        command,
+				Token:      token,
+				Status:     "pending",
+				IMEI:       imei,
+				CMDInfo:    commands[cmd],
+				QueueD:     d,
+			}
+
+			receivedCommands[token] = recievedCmd
+			mg.Insert(ctx, cmdsColl, recievedCmd)
+			c.Conn.Write(sComPackage)
+		} else {
+			msg := fmt.Sprintf("device with imei %s not connected", imei)
+			err = rbtChannel.Publish(
+				"",
+				"temp",
+				false,
+				false,
+				amqp.Publishing{
+					ContentType:   "text/plain",
+					CorrelationId: d.CorrelationId,
+					Body:          []byte(msg),
+				},
+			)
+			d.Ack(false)
+		}
+
 	}
 }
 
