@@ -371,8 +371,8 @@ func handleServe(conn net.Conn) {
 			device.ServerTime = time.Now().UnixMicro()
 			BindDeviceMainPropertys(&device)
 			device.Online = true
-			marshal, _ := json.Marshal(device)
-			fmt.Println(string(marshal))
+			// marshal, _ := json.Marshal(device)
+			// fmt.Println(string(marshal))
 			for _, v := range wsConnections {
 				v.WriteJSON(device)
 			}
