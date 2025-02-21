@@ -1,6 +1,7 @@
 package main
 
 import (
+	"arnaviparser/broker/rabbit"
 	. "arnaviparser/structs"
 	"context"
 	"database/sql"
@@ -25,9 +26,9 @@ import (
 	. "arnaviparser/protocols/arnavi"
 
 	"github.com/gorilla/mux"
-	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	amqp "github.com/rabbitmq/amqp091-go"
 	"github.com/rs/cors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -42,7 +43,6 @@ var deviceIdsBytesAssotiation map[int]string
 var commands map[string]*Command
 var receivedCommands map[string]*ReceivedCommand
 var addedImeis []int64
-var wsConnections []*websocket.Conn
 var db *sql.DB
 
 const (
@@ -347,7 +347,6 @@ func handleServe(conn net.Conn) {
 					}
 					mg.UpdOne(ctx, cmdsColl, f, upd)
 					fmt.Println(pktType, errCode, token, cs)
-
 					receivedCommand.ExecChannel <- true
 					// delete(receivedCommands, token)
 
@@ -373,10 +372,7 @@ func handleServe(conn net.Conn) {
 			BindDeviceMainPropertys(&device)
 			device.Online = true
 			marshal, _ := json.Marshal(device)
-			fmt.Println(string(marshal))
-			for _, v := range wsConnections {
-				v.WriteJSON(device)
-			}
+			publishPacket(marshal)
 			_, e := scooterColl.InsertOne(ctx, device)
 			if e != nil {
 				fmt.Println("Insert scooter error")
@@ -662,6 +658,25 @@ func initHttp() {
 	log.Fatal(srv.ListenAndServe())
 }
 
+var rbtConn *amqp.Connection
+var rbtCh *amqp.Channel
+
+func publishPacket(pkt []byte) {
+	err := rbtCh.Publish(
+		"",
+		"packets",
+		false,
+		false,
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        pkt,
+		},
+	)
+	if err != nil {
+		log.Println("failed to publish message", err.Error())
+	}
+}
+
 func main() {
 	db = pg.ConnectPG()
 	defer db.Close()
@@ -706,6 +721,25 @@ func main() {
 	}
 
 	log.Println("Server started:", serve.Addr().Network())
+
+	rbtConn = rabbit.Conn()
+	ch, err := rbtConn.Channel()
+	rbtCh = ch
+
+	if err != nil {
+		log.Fatalln(err.Error())
+	}
+
+	defer ch.Close()
+
+	_, err = ch.QueueDeclare(
+		"packets",
+		false,
+		false,
+		false,
+		false,
+		nil,
+	)
 
 	for {
 		conn, err := serve.Accept()
