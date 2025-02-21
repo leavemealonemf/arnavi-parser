@@ -539,6 +539,12 @@ func initIOTCommands() {
 		NameEn: "Найти самокат",
 		NameRu: "Найти самокат",
 	}
+
+	commands["unlock-wheel-lock1"] = &Command{
+		Val:    "51080001",
+		NameEn: "Открыть замок 1 на 4 секунды",
+		NameRu: "Открыть замок 1 на 4 секунды",
+	}
 }
 
 var scooterColl *mongo.Collection
@@ -576,7 +582,6 @@ func HTTPCommandHandler(w http.ResponseWriter, r *http.Request) {
 			cmdInfo := commands[cmd]
 
 			if cmdInfo == nil {
-				// msg := fmt.Sprintf("this command does not exist %s", cmd)
 				w.WriteHeader(404)
 				w.Write([]byte("this command does not exist"))
 				return
