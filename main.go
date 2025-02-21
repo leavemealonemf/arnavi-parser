@@ -347,7 +347,7 @@ func handleServe(conn net.Conn) {
 					fmt.Println(pktType, errCode, token, cs)
 
 					AcceptCommand(receivedCommand)
-
+					time.Sleep(100 * time.Millisecond)
 					delete(receivedCommands, token)
 
 					break
@@ -553,6 +553,7 @@ func AcceptCommand(rc *ReceivedCommand) {
 			Body:          r,
 		},
 	)
+	log.Printf("Отправляем ответ с CorrelationId: %s", rc.QueueD.CorrelationId)
 	if err != nil {
 		log.Printf("Не удалось отправить ответ: %s", err)
 	}
