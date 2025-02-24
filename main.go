@@ -337,8 +337,8 @@ func handleServe(conn net.Conn) {
 					start += 8
 					errCode := hexPackageData[start : start+2]
 					start += 2
-					token := "ff" + hexPackageData[start:start+6]
-					start += 6
+					token := "ff" + hexPackageData[start:start+8]
+					start += 8
 					cs := hexPackageData[start : start+2]
 					start += 2
 
@@ -373,6 +373,7 @@ func handleServe(conn net.Conn) {
 
 					break
 				} else if strings.ToLower(hexPacket.TypeOfContent) == "08" {
+					fmt.Println("GET 08 PACKET TYPE!!!!")
 					break
 				} else {
 					isBrokePackage = true
