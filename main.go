@@ -367,6 +367,7 @@ func handleServe(conn net.Conn) {
 						}},
 					}
 					mg.UpdOne(ctx, cmdsColl, f, upd)
+
 					fmt.Println(pktType, errCode, token, cs)
 					receivedCommand.ExecChannel <- true
 					// delete(receivedCommands, token)
@@ -635,28 +636,28 @@ func initIOTCommands() {
 		Val:         "0101",
 		NameEn:      "Transmit a packet with coordinates",
 		NameRu:      "Отправить пакет с координатами",
-		WithConfirm: false,
+		WithConfirm: true,
 	}
 
 	commands["reset-devices"] = &Command{
 		Val:         "0107",
 		NameEn:      "Reset module",
 		NameRu:      "Перезагрузить модуль",
-		WithConfirm: false,
+		WithConfirm: true,
 	}
 
 	commands["update-firmware"] = &Command{
 		Val:         "0105",
 		NameEn:      "Update firmware",
 		NameRu:      "Обновить прошивку",
-		WithConfirm: false,
+		WithConfirm: true,
 	}
 
 	commands["update-settings"] = &Command{
 		Val:         "0108",
 		NameEn:      "Update settings",
 		NameRu:      "Обновить настройки (Загрузка из веб-конфигуратора)",
-		WithConfirm: false,
+		WithConfirm: true,
 	}
 }
 
@@ -711,7 +712,7 @@ func HTTPCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 				cs := Checksum(totalBy)
 
-				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
+				command := fmt.Sprintf("7B07FF%s%s%s7D", cs, token, cmdInfo.Val)
 				sComPackage, _ := hex.DecodeString(command)
 				cmdChan := make(chan bool)
 
