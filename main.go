@@ -54,11 +54,11 @@ func handleServe(conn net.Conn) {
 
 	buff := make([]byte, tcpMsgBuff)
 
-	var mainDevice Device
+	var mainDevice *Device = &Device{}
 
 	connection := &Connection{
 		Conn:   conn,
-		Device: &mainDevice,
+		Device: mainDevice,
 	}
 
 	defer func() {
@@ -389,17 +389,30 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
-			// mainDevice.ServerTime = time.Now().UnixMicro()
-			// BindDeviceMainPropertys(&mainDevice)
-			// mainDevice.Online = true
-			// marshal, _ := json.Marshal(mainDevice)
-			// publishPacket(marshal)
-			// _, e := scooterColl.InsertOne(ctx, device)
-			// if e != nil {
-			// 	fmt.Println("Insert scooter error")
-			// } else {
-			// 	fmt.Println("Insert scooter successfully")
-			// }
+			for i := 0; i < len(totalPackets); i++ {
+				if totalPackets[i] != nil {
+					if (i + 1) == len(totalPackets) {
+						mainDevice = totalPackets[i]
+						return
+					}
+					if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
+						mainDevice = totalPackets[i]
+						return
+					}
+				}
+			}
+
+			mainDevice.ServerTime = time.Now().UnixMicro()
+			BindDeviceMainPropertys(mainDevice)
+			mainDevice.Online = true
+			marshal, _ := json.Marshal(mainDevice)
+			publishPacket(marshal)
+			_, e := scooterColl.InsertOne(ctx, mainDevice)
+			if e != nil {
+				fmt.Println("Insert scooter error")
+			} else {
+				fmt.Println("Insert scooter successfully")
+			}
 		}
 	}
 }
