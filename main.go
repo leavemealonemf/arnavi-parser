@@ -387,18 +387,21 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
-			for i := 0; i < len(totalPackets); i++ {
-				if totalPackets[i] != nil {
-					if (i + 1) == len(totalPackets) {
-						mainDevice = totalPackets[i]
-						break
-					}
-					if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
-						mainDevice = totalPackets[i]
-						break
-					}
-				}
-			}
+			// for i := 0; i < len(totalPackets); i++ {
+			// 	if totalPackets[i] != nil {
+			// 		if (i + 1) == len(totalPackets) {
+			// 			mainDevice = totalPackets[i]
+			// 			break
+			// 		}
+			// 		if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
+			// 			mainDevice = totalPackets[i]
+			// 			break
+			// 		}
+			// 	}
+			// }
+			imei := mainDevice.IMEI
+			mainDevice = totalPackets[0]
+			mainDevice.IMEI = imei
 
 			mainDevice.ServerTime = time.Now().UnixMicro()
 			BindDeviceMainPropertys(mainDevice)
