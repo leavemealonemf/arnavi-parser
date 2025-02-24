@@ -50,13 +50,13 @@ const (
 )
 
 func handleServe(conn net.Conn) {
-	err := conn.SetReadDeadline(time.Now().Add(time.Second * 10))
+	// err := conn.SetReadDeadline(time.Now().Add(time.Second * 10))
 
-	if err != nil {
-		fmt.Println("failed to set read deadline")
-		conn.Close()
-		return
-	}
+	// if err != nil {
+	// 	fmt.Println("failed to set read deadline")
+	// 	conn.Close()
+	// 	return
+	// }
 
 	isFirstConn := true
 
