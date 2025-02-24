@@ -405,11 +405,13 @@ func handleServe(conn net.Conn) {
 				continue
 			}
 
+			imei := mainDevice.IMEI
+
 			for i := 0; i < len(totalPackets); i++ {
-				fmt.Printf("total len %d, current index + 1 (%d)\n", len(totalPackets), i+1)
+				// fmt.Printf("total len %d, current index + 1 (%d)\n", len(totalPackets), i+1)
 				if totalPackets[i] != nil {
 					if (i + 1) == len(totalPackets) {
-						fmt.Println("we got expression: ((i + 1) == len(totalPackets)). exit...")
+						// fmt.Println("we got expression: ((i + 1) == len(totalPackets)). exit...")
 						mainDevice = totalPackets[i]
 						break
 					}
@@ -420,8 +422,6 @@ func handleServe(conn net.Conn) {
 				}
 			}
 
-			imei := mainDevice.IMEI
-			mainDevice = totalPackets[0]
 			mainDevice.IMEI = imei
 
 			mainDevice.ServerTime = time.Now().UnixMicro()
