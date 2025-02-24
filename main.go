@@ -401,6 +401,11 @@ func handleServe(conn net.Conn) {
 			// 		}
 			// 	}
 			// }
+
+			if len(totalPackets) == 0 {
+				continue
+			}
+
 			imei := mainDevice.IMEI
 			mainDevice = totalPackets[0]
 			mainDevice.IMEI = imei
