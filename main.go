@@ -56,11 +56,11 @@ func handleServe(conn net.Conn) {
 
 	buff := make([]byte, tcpMsgBuff)
 
-	var device Device
+	var mainDevice Device
 
 	connection := &Connection{
 		Conn:   conn,
-		Device: &device,
+		Device: &mainDevice,
 	}
 
 	for {
@@ -123,9 +123,8 @@ func handleServe(conn net.Conn) {
 
 			// // END VALIDATE IMEI IN DATABASE
 
-			device.IMEI = decIMEI
+			mainDevice.IMEI = decIMEI
 
-			devices = append(devices, &device)
 			connections[decIMEI] = connection
 
 			// send SERVER_COM
@@ -142,12 +141,16 @@ func handleServe(conn net.Conn) {
 			var start int64 = 4
 			isBrokePackage := false
 
+			var totalPackets []*Device
+
 			for {
 				hexPacket := &HEXPacket{
 					TypeOfContent: hexPackageData[start : start+2],
 				}
 
 				if strings.ToLower(hexPacket.TypeOfContent) == "01" {
+					var device Device
+
 					start += 2 // skip type
 					hexPacket.PacketDataLen = hexPackageData[start : start+2]
 					dataLenBytes := (HexToDec(hexPackageData[start:start+2]) * 2)
@@ -178,7 +181,7 @@ func handleServe(conn net.Conn) {
 						}
 
 						tagIDDec := HexToDec(string(hexPacket.TagsData[i : i+2]))
-						tagFull := hexPacket.TagsData[i : i+10]
+						// tagFull := hexPacket.TagsData[i : i+10]
 						tagParam := hexPacket.TagsData[i+2 : i+10]
 
 						switch tagIDDec {
@@ -295,11 +298,14 @@ func handleServe(conn net.Conn) {
 							break
 						}
 
-						fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
-						fmt.Println("--------------------")
+						// fmt.Printf("decimal tag_id: %v\nfull hex_tag: %v\ntag_param_without_id: %v\n", tagIDDec, tagFull, tagParam)
+						// fmt.Println("--------------------")
+
 					}
 
-					printHexPacketStructData(hexPacket)
+					// printHexPacketStructData(hexPacket)
+
+					totalPackets = append(totalPackets, &device)
 
 					if hexPackageData[start:start+2] == "5d" {
 						// sendServerComSuccessed("506", conn)
@@ -368,17 +374,28 @@ func handleServe(conn net.Conn) {
 			// 	break
 			// }
 
-			device.ServerTime = time.Now().UnixMicro()
-			BindDeviceMainPropertys(&device)
-			device.Online = true
-			marshal, _ := json.Marshal(device)
-			publishPacket(marshal)
-			_, e := scooterColl.InsertOne(ctx, device)
-			if e != nil {
-				fmt.Println("Insert scooter error")
-			} else {
-				fmt.Println("Insert scooter successfully")
+			fmt.Println("total packet's in package:", len(totalPackets))
+			fmt.Println("print json info about single packet:")
+			for i := 0; i < len(totalPackets); i++ {
+				if totalPackets[i] != nil {
+					fmt.Println("------------------------")
+					fmt.Println("Packet", i+1, ":")
+					pck, _ := json.Marshal(totalPackets[i])
+					fmt.Println(string(pck))
+				}
 			}
+
+			// mainDevice.ServerTime = time.Now().UnixMicro()
+			// BindDeviceMainPropertys(&mainDevice)
+			// mainDevice.Online = true
+			// marshal, _ := json.Marshal(mainDevice)
+			// publishPacket(marshal)
+			// _, e := scooterColl.InsertOne(ctx, device)
+			// if e != nil {
+			// 	fmt.Println("Insert scooter error")
+			// } else {
+			// 	fmt.Println("Insert scooter successfully")
+			// }
 		}
 	}
 }
