@@ -44,7 +44,7 @@ func Checksum(val []byte) string {
 }
 
 func GenСmdTokenHex() (string, error) {
-	bytes := make([]byte, 6)
+	bytes := make([]byte, 5)
 	_, err := rand.Read(bytes)
 	if err != nil {
 		return "", fmt.Errorf("GenСmdTokenHex err: %v\n", err.Error())
