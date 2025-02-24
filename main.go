@@ -531,73 +531,73 @@ func printHexPacketStructData(packet *HEXPacket) {
 func initIOTCommands() {
 	commands = map[string]*Command{}
 	commands["engine-m1txq"] = &Command{
-		Val:    "51330001",
+		Val:    "330001",
 		NameEn: "Block Scooter Motor Wheel",
 		NameRu: "Блокировка мотор колеса",
 	}
 	commands["unlock-tt3rm"] = &Command{
-		Val:    "51330000",
+		Val:    "330000",
 		NameEn: "Disable Guard Mode",
 		NameRu: "Снять с режима охраны",
 	}
 	commands["lock-lyoqv"] = &Command{
-		Val:    "51330005",
+		Val:    "330005",
 		NameEn: "Enable Guard Mode",
 		NameRu: "Установить режим охраны",
 	}
-	commands["51330006"] = &Command{
+	commands["330006"] = &Command{
 		Val:    "51330006",
 		NameEn: "Set Service Mode",
 		NameRu: "Установить режим сервиса",
 	}
 	commands["speed-mode-4i6ku"] = &Command{
-		Val:    "51330300",
+		Val:    "330300",
 		NameEn: "Set Drive Mode D",
 		NameRu: "Установить стиль езды D",
 	}
 	commands["speed-mode-72fcz"] = &Command{
-		Val:    "51330301",
+		Val:    "330301",
 		NameEn: "Set Drive Mode ECO",
 		NameRu: "Установить стиль езды ECO",
 	}
 	commands["speed-mode-uohen"] = &Command{
-		Val:    "51330302",
+		Val:    "330302",
 		NameEn: "Set Drive Mode S",
 		NameRu: "Установить стиль езды S",
 	}
 	commands["lamp-xurbd"] = &Command{
-		Val:    "51080201",
+		Val:    "080201",
 		NameEn: "Turn On Flash",
 		NameRu: "Включить фонарь",
 	}
 	commands["lamp-k2uex-umofv-0hpjw"] = &Command{
-		Val:    "51080200",
+		Val:    "080200",
 		NameEn: "Turn Off Flash",
 		NameRu: "Выключить фонарь",
 	}
 	// speed
 	commands["speed-limit-norm-jxl0w"] = &Command{
-		Val:    "51330405",
+		Val:    "330405",
 		NameEn: "Speed Limit 5 km/h",
 		NameRu: "Ограничение скорости 5 км/ч",
 	}
 	commands["speed-limit-norm-cd8mx"] = &Command{
-		Val:    "5133040A",
+		Val:    "33040A",
 		NameEn: "Speed Limit 10 km/h",
 		NameRu: "Ограничение скорости 10 км/ч",
 	}
 	commands["speed-limit-norm-7s2eo"] = &Command{
-		Val:    "5133040F",
+		Val:    "33040F",
 		NameEn: "Speed Limit 15 km/h",
 		NameRu: "Ограничение скорости 15 км/ч",
 	}
 	commands["speed-limit-norm-ldzq6"] = &Command{
-		Val:    "51330414",
+		Val:    "330414",
 		NameEn: "Speed Limit 20 km/h",
 		NameRu: "Ограничение скорости 20 км/ч",
 	}
 	commands["speed-limit-norm-gyjf3"] = &Command{
-		Val:    "51330419",
+		Val:    "330419",
 		NameEn: "Speed Limit 25 km/h",
 		NameRu: "Ограничение скорости 25 км/ч",
 	}
@@ -609,19 +609,19 @@ func initIOTCommands() {
 	}
 
 	commands["unlock-wheel-lock1"] = &Command{
-		Val:    "51080001",
+		Val:    "080001",
 		NameEn: "Открыть замок 1 на 4 секунды",
 		NameRu: "Открыть замок 1 на 4 секунды",
 	}
 
 	commands["transmit-with-coords"] = &Command{
-		Val:    "510101",
+		Val:    "0101",
 		NameEn: "Transmit a packet with coordinates",
 		NameRu: "Отправить пакет с координатами",
 	}
 
 	commands["reset-devices"] = &Command{
-		Val:    "510107",
+		Val:    "0107",
 		NameEn: "Reset devices",
 		NameRu: "Сбросить устройства",
 	}
