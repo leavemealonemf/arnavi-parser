@@ -613,6 +613,18 @@ func initIOTCommands() {
 		NameEn: "Открыть замок 1 на 4 секунды",
 		NameRu: "Открыть замок 1 на 4 секунды",
 	}
+
+	commands["transmit-with-coords"] = &Command{
+		Val:    "510101",
+		NameEn: "Transmit a packet with coordinates",
+		NameRu: "Отправить пакет с координатами",
+	}
+
+	commands["reset-devices"] = &Command{
+		Val:    "510107",
+		NameEn: "Reset devices",
+		NameRu: "Сбросить устройства",
+	}
 }
 
 var scooterColl *mongo.Collection
