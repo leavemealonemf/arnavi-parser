@@ -74,7 +74,7 @@ func handleServe(conn net.Conn) {
 
 		hexPackageData := BytesToHexString(buff)
 		n := runtime.Stack(buff, true)
-		fmt.Println("Received msg:", buff[:n])
+		fmt.Println("Received msg:", string(buff[:n]))
 
 		if isFirstConn {
 			// check data is header
