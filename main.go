@@ -477,11 +477,24 @@ func AbortTCPDeviceConn(conn *Connection) {
 		}
 
 		opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
-		mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
+		res := mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
 
 		conn.Conn.Close()
-
 		delete(connections, conn.Device.IMEI)
+
+		var dvce Device
+		err := res.Decode(&dvce)
+		if err != nil {
+			fmt.Println("[abort tcp conn] failed to decode result mongo")
+			return
+		}
+		j, err := json.Marshal(&dvce)
+		if err != nil {
+			fmt.Println("[abort tcp conn] failed to marshal result")
+			return
+		}
+
+		publishPacket(j)
 	}
 }
 
