@@ -383,15 +383,15 @@ func handleServe(conn net.Conn) {
 
 			fmt.Println("total packet's in package:", len(totalPackets))
 			fmt.Println("Device IMEI:", mainDevice.IMEI)
-			fmt.Println("print json info about single packet:")
-			for i := 0; i < len(totalPackets); i++ {
-				if totalPackets[i] != nil {
-					fmt.Println("------------------------")
-					fmt.Println("Packet", i+1, ":")
-					pck, _ := json.Marshal(totalPackets[i])
-					fmt.Println(string(pck))
-				}
-			}
+			// fmt.Println("print json info about single packet:")
+			// for i := 0; i < len(totalPackets); i++ {
+			// 	if totalPackets[i] != nil {
+			// 		fmt.Println("------------------------")
+			// 		fmt.Println("Packet", i+1, ":")
+			// 		pck, _ := json.Marshal(totalPackets[i])
+			// 		fmt.Println(string(pck))
+			// 	}
+			// }
 
 			// for i := 0; i < len(totalPackets); i++ {
 			// 	if totalPackets[i] != nil {
@@ -476,6 +476,10 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 }
 
 func AbortTCPDeviceConn(conn *Connection) {
+	if connections[conn.Device.IMEI] != nil {
+		delete(connections, conn.Device.IMEI)
+	}
+
 	filter := bson.D{
 		{Key: "imei", Value: conn.Device.IMEI},
 	}
@@ -500,10 +504,6 @@ func AbortTCPDeviceConn(conn *Connection) {
 	if err != nil {
 		fmt.Println("[abort tcp conn] failed to marshal result")
 		return
-	}
-
-	if connections[conn.Device.IMEI] != nil {
-		delete(connections, conn.Device.IMEI)
 	}
 
 	publishPacket(j)
