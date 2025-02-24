@@ -499,6 +499,7 @@ func AbortTCPDeviceConn(conn *Connection) {
 		fmt.Println("[abort tcp conn] failed to decode result mongo")
 		return
 	}
+	dvce.Online = false
 	fmt.Println("online info after disconnect", dvce.Online)
 	j, err := json.Marshal(&dvce)
 	if err != nil {
