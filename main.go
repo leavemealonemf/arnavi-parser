@@ -76,6 +76,10 @@ func handleServe(conn net.Conn) {
 		hexPackageData := BytesToHexString(buff)
 		// fmt.Println("Received msg:", hexPackageData)
 
+		if !isFirstConn && connections[connection.Device.IMEI] == nil {
+			break
+		}
+
 		if isFirstConn {
 			// check data is header
 
@@ -472,36 +476,36 @@ func sendServerComFailed(codeLine string, conn net.Conn) {
 }
 
 func AbortTCPDeviceConn(conn *Connection) {
-	if connections[conn.Device.IMEI] != nil {
-		filter := bson.D{
-			{Key: "imei", Value: conn.Device.IMEI},
-		}
-
-		update := bson.D{
-			{"$set", bson.D{
-				{Key: "online", Value: false},
-			}},
-		}
-
-		opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
-		res := mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
-
-		delete(connections, conn.Device.IMEI)
-
-		var dvce Device
-		err := res.Decode(&dvce)
-		if err != nil {
-			fmt.Println("[abort tcp conn] failed to decode result mongo")
-			return
-		}
-		j, err := json.Marshal(&dvce)
-		if err != nil {
-			fmt.Println("[abort tcp conn] failed to marshal result")
-			return
-		}
-
-		publishPacket(j)
+	filter := bson.D{
+		{Key: "imei", Value: conn.Device.IMEI},
 	}
+
+	update := bson.D{
+		{"$set", bson.D{
+			{Key: "online", Value: false},
+		}},
+	}
+
+	opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
+	res := mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
+
+	var dvce Device
+	err := res.Decode(&dvce)
+	if err != nil {
+		fmt.Println("[abort tcp conn] failed to decode result mongo")
+		return
+	}
+	j, err := json.Marshal(&dvce)
+	if err != nil {
+		fmt.Println("[abort tcp conn] failed to marshal result")
+		return
+	}
+
+	if connections[conn.Device.IMEI] != nil {
+		delete(connections, conn.Device.IMEI)
+	}
+
+	publishPacket(j)
 }
 
 func processICCID(revBytes []byte, device *Device, partNum uint8) {
