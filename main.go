@@ -61,7 +61,10 @@ func handleServe(conn net.Conn) {
 		Device: mainDevice,
 	}
 
-	defer AbortTCPDeviceConn(connection)
+	defer func() {
+		AbortTCPDeviceConn(connection)
+		conn.Close()
+	}()
 
 	for {
 		_, err := conn.Read(buff)
@@ -72,7 +75,7 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		fmt.Println("Received msg:", hexPackageData)
+		// fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
 			// check data is header
@@ -479,7 +482,6 @@ func AbortTCPDeviceConn(conn *Connection) {
 		opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
 		res := mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
 
-		conn.Conn.Close()
 		delete(connections, conn.Device.IMEI)
 
 		var dvce Device
