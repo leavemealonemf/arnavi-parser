@@ -712,7 +712,7 @@ func HTTPCommandHandler(w http.ResponseWriter, r *http.Request) {
 
 				cs := Checksum(totalBy)
 
-				command := fmt.Sprintf("7B%02XFF%s%s%s7D", len(totalBy), cs, token, cmdInfo.Val)
+				command := fmt.Sprintf("7B%02XFF%s%s%s7D", (len(totalBy) - 1), cs, token, cmdInfo.Val)
 				sComPackage, _ := hex.DecodeString(command)
 				cmdChan := make(chan bool)
 
