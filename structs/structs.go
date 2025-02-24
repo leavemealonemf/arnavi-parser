@@ -143,9 +143,10 @@ type Device struct {
 }
 
 type Command struct {
-	Val    string `json:"cmd_hex" bson:"cmd_hex,omitempty"`
-	NameEn string `json:"name_en" bson:"name_en,omitempty"`
-	NameRu string `json:"name_ru" bson:"name_ru,omitempty"`
+	Val         string `json:"cmd_hex" bson:"cmd_hex,omitempty"`
+	NameEn      string `json:"name_en" bson:"name_en,omitempty"`
+	NameRu      string `json:"name_ru" bson:"name_ru,omitempty"`
+	WithConfirm bool   `json:"-" bson:"-"`
 }
 
 type QueueCmd struct {

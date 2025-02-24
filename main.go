@@ -532,111 +532,131 @@ func printHexPacketStructData(packet *HEXPacket) {
 func initIOTCommands() {
 	commands = map[string]*Command{}
 	commands["engine-m1txq"] = &Command{
-		Val:    "330001",
-		NameEn: "Block Scooter Motor Wheel",
-		NameRu: "Блокировка мотор колеса",
+		Val:         "330001",
+		NameEn:      "Block Scooter Motor Wheel",
+		NameRu:      "Блокировка мотор колеса",
+		WithConfirm: true,
 	}
 	commands["unlock-tt3rm"] = &Command{
-		Val:    "330000",
-		NameEn: "Disable Guard Mode",
-		NameRu: "Снять с режима охраны",
+		Val:         "330000",
+		NameEn:      "Disable Guard Mode",
+		NameRu:      "Снять с режима охраны",
+		WithConfirm: true,
 	}
 	commands["lock-lyoqv"] = &Command{
-		Val:    "330005",
-		NameEn: "Enable Guard Mode",
-		NameRu: "Установить режим охраны",
+		Val:         "330005",
+		NameEn:      "Enable Guard Mode",
+		NameRu:      "Установить режим охраны",
+		WithConfirm: true,
 	}
 	commands["330006"] = &Command{
-		Val:    "51330006",
-		NameEn: "Set Service Mode",
-		NameRu: "Установить режим сервиса",
+		Val:         "51330006",
+		NameEn:      "Set Service Mode",
+		NameRu:      "Установить режим сервиса",
+		WithConfirm: true,
 	}
 	commands["speed-mode-4i6ku"] = &Command{
-		Val:    "330300",
-		NameEn: "Set Drive Mode D",
-		NameRu: "Установить стиль езды D",
+		Val:         "330300",
+		NameEn:      "Set Drive Mode D",
+		NameRu:      "Установить стиль езды D",
+		WithConfirm: true,
 	}
 	commands["speed-mode-72fcz"] = &Command{
-		Val:    "330301",
-		NameEn: "Set Drive Mode ECO",
-		NameRu: "Установить стиль езды ECO",
+		Val:         "330301",
+		NameEn:      "Set Drive Mode ECO",
+		NameRu:      "Установить стиль езды ECO",
+		WithConfirm: true,
 	}
 	commands["speed-mode-uohen"] = &Command{
-		Val:    "330302",
-		NameEn: "Set Drive Mode S",
-		NameRu: "Установить стиль езды S",
+		Val:         "330302",
+		NameEn:      "Set Drive Mode S",
+		NameRu:      "Установить стиль езды S",
+		WithConfirm: true,
 	}
 	commands["lamp-xurbd"] = &Command{
-		Val:    "080201",
-		NameEn: "Turn On Flash",
-		NameRu: "Включить фонарь",
+		Val:         "080201",
+		NameEn:      "Turn On Flash",
+		NameRu:      "Включить фонарь",
+		WithConfirm: true,
 	}
 	commands["lamp-k2uex-umofv-0hpjw"] = &Command{
-		Val:    "080200",
-		NameEn: "Turn Off Flash",
-		NameRu: "Выключить фонарь",
+		Val:         "080200",
+		NameEn:      "Turn Off Flash",
+		NameRu:      "Выключить фонарь",
+		WithConfirm: true,
 	}
 	// speed
 	commands["speed-limit-norm-jxl0w"] = &Command{
-		Val:    "330405",
-		NameEn: "Speed Limit 5 km/h",
-		NameRu: "Ограничение скорости 5 км/ч",
+		Val:         "330405",
+		NameEn:      "Speed Limit 5 km/h",
+		NameRu:      "Ограничение скорости 5 км/ч",
+		WithConfirm: true,
 	}
 	commands["speed-limit-norm-cd8mx"] = &Command{
-		Val:    "33040A",
-		NameEn: "Speed Limit 10 km/h",
-		NameRu: "Ограничение скорости 10 км/ч",
+		Val:         "33040A",
+		NameEn:      "Speed Limit 10 km/h",
+		NameRu:      "Ограничение скорости 10 км/ч",
+		WithConfirm: true,
 	}
 	commands["speed-limit-norm-7s2eo"] = &Command{
-		Val:    "33040F",
-		NameEn: "Speed Limit 15 km/h",
-		NameRu: "Ограничение скорости 15 км/ч",
+		Val:         "33040F",
+		NameEn:      "Speed Limit 15 km/h",
+		NameRu:      "Ограничение скорости 15 км/ч",
+		WithConfirm: true,
 	}
 	commands["speed-limit-norm-ldzq6"] = &Command{
-		Val:    "330414",
-		NameEn: "Speed Limit 20 km/h",
-		NameRu: "Ограничение скорости 20 км/ч",
+		Val:         "330414",
+		NameEn:      "Speed Limit 20 km/h",
+		NameRu:      "Ограничение скорости 20 км/ч",
+		WithConfirm: true,
 	}
 	commands["speed-limit-norm-gyjf3"] = &Command{
-		Val:    "330419",
-		NameEn: "Speed Limit 25 km/h",
-		NameRu: "Ограничение скорости 25 км/ч",
+		Val:         "330419",
+		NameEn:      "Speed Limit 25 km/h",
+		NameRu:      "Ограничение скорости 25 км/ч",
+		WithConfirm: true,
 	}
 
 	commands["beeper-j5shv"] = &Command{
-		Val:    "1803000A",
-		NameEn: "Найти самокат",
-		NameRu: "Найти самокат",
+		Val:         "1803000A",
+		NameEn:      "Найти самокат",
+		NameRu:      "Найти самокат",
+		WithConfirm: true,
 	}
 
 	commands["unlock-wheel-lock1"] = &Command{
-		Val:    "080001",
-		NameEn: "Открыть замок 1 на 4 секунды",
-		NameRu: "Открыть замок 1 на 4 секунды",
+		Val:         "080001",
+		NameEn:      "Открыть замок 1 на 4 секунды",
+		NameRu:      "Открыть замок 1 на 4 секунды",
+		WithConfirm: true,
 	}
 
 	commands["transmit-with-coords"] = &Command{
-		Val:    "0101",
-		NameEn: "Transmit a packet with coordinates",
-		NameRu: "Отправить пакет с координатами",
+		Val:         "0101",
+		NameEn:      "Transmit a packet with coordinates",
+		NameRu:      "Отправить пакет с координатами",
+		WithConfirm: false,
 	}
 
 	commands["reset-devices"] = &Command{
-		Val:    "0107",
-		NameEn: "Reset module",
-		NameRu: "Перезагрузить модуль",
+		Val:         "0107",
+		NameEn:      "Reset module",
+		NameRu:      "Перезагрузить модуль",
+		WithConfirm: false,
 	}
 
 	commands["update-firmware"] = &Command{
-		Val:    "0105",
-		NameEn: "Update firmware",
-		NameRu: "Обновить прошивку",
+		Val:         "0105",
+		NameEn:      "Update firmware",
+		NameRu:      "Обновить прошивку",
+		WithConfirm: false,
 	}
 
 	commands["update-settings"] = &Command{
-		Val:    "0108",
-		NameEn: "Update settings",
-		NameRu: "Обновить настройки (Загрузка из веб-конфигуратора)",
+		Val:         "0108",
+		NameEn:      "Update settings",
+		NameRu:      "Обновить настройки (Загрузка из веб-конфигуратора)",
+		WithConfirm: false,
 	}
 }
 
@@ -680,46 +700,84 @@ func HTTPCommandHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			token, _ := GenСmdTokenHex()
-			tokenBy := HexToBytes(token)
-			cmdBy := HexToBytes(cmdInfo.Val)
+			if cmdInfo.WithConfirm {
+				token, _ := GenСmdTokenHex()
+				tokenBy := HexToBytes(token)
+				cmdBy := HexToBytes(cmdInfo.Val)
 
-			totalBy := make([]byte, 2)
-			totalBy = append(totalBy, tokenBy...)
-			totalBy = append(totalBy, cmdBy...)
+				totalBy := make([]byte, 2)
+				totalBy = append(totalBy, tokenBy...)
+				totalBy = append(totalBy, cmdBy...)
 
-			cs := Checksum(totalBy)
+				cs := Checksum(totalBy)
 
-			command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
-			sComPackage, _ := hex.DecodeString(command)
-			cmdChan := make(chan bool)
+				command := fmt.Sprintf("7B08FF%s%s%s7D", cs, token, cmdInfo.Val)
+				sComPackage, _ := hex.DecodeString(command)
+				cmdChan := make(chan bool)
 
-			recievedCmd := &ReceivedCommand{
-				ServerTime:  time.Now().UnixMicro(),
-				CMD:         command,
-				Token:       token,
-				Status:      "pending",
-				IMEI:        imei,
-				CMDInfo:     commands[cmd],
-				ExecChannel: cmdChan,
-			}
+				recievedCmd := &ReceivedCommand{
+					ServerTime:  time.Now().UnixMicro(),
+					CMD:         command,
+					Token:       token,
+					Status:      "pending",
+					IMEI:        imei,
+					CMDInfo:     commands[cmd],
+					ExecChannel: cmdChan,
+				}
 
-			receivedCommands[token] = recievedCmd
-			mg.Insert(ctx, cmdsColl, recievedCmd)
-			c.Conn.Write(sComPackage)
+				receivedCommands[token] = recievedCmd
+				mg.Insert(ctx, cmdsColl, recievedCmd)
+				c.Conn.Write(sComPackage)
 
-			select {
-			case success := <-cmdChan:
-				if success {
-					w.Write([]byte(fmt.Sprintf("Command %s executed successfully", cmd)))
-					delete(receivedCommands, token)
-				} else {
-					http.Error(w, "Command execution failed", http.StatusInternalServerError)
+				select {
+				case success := <-cmdChan:
+					if success {
+						w.Write([]byte(fmt.Sprintf("Command %s executed successfully", cmd)))
+						delete(receivedCommands, token)
+					} else {
+						http.Error(w, "Command execution failed", http.StatusInternalServerError)
+						delete(receivedCommands, token)
+					}
+				case <-time.After(60 * time.Second):
+					http.Error(w, "Command execution timed out", http.StatusRequestTimeout)
 					delete(receivedCommands, token)
 				}
-			case <-time.After(60 * time.Second):
-				http.Error(w, "Command execution timed out", http.StatusRequestTimeout)
-				delete(receivedCommands, token)
+			} else {
+				token, _ := GenСmdTokenHex()
+				cmdBy := HexToBytes(cmdInfo.Val)
+				cs := Checksum(cmdBy)
+
+				command := fmt.Sprintf("7B08FF%s%s7D", cs, cmdInfo.Val)
+				sComPackage, _ := hex.DecodeString(command)
+				cmdChan := make(chan bool)
+
+				recievedCmd := &ReceivedCommand{
+					ServerTime:  time.Now().UnixMicro(),
+					CMD:         command,
+					Token:       token,
+					Status:      "pending",
+					IMEI:        imei,
+					CMDInfo:     commands[cmd],
+					ExecChannel: cmdChan,
+				}
+
+				receivedCommands[token] = recievedCmd
+				mg.Insert(ctx, cmdsColl, recievedCmd)
+				c.Conn.Write(sComPackage)
+
+				select {
+				case success := <-cmdChan:
+					if success {
+						w.Write([]byte(fmt.Sprintf("Command %s executed successfully", cmd)))
+						delete(receivedCommands, token)
+					} else {
+						http.Error(w, "Command execution failed", http.StatusInternalServerError)
+						delete(receivedCommands, token)
+					}
+				case <-time.After(60 * time.Second):
+					http.Error(w, "Command execution timed out", http.StatusRequestTimeout)
+					delete(receivedCommands, token)
+				}
 			}
 
 		} else {
