@@ -50,8 +50,6 @@ const (
 )
 
 func handleServe(conn net.Conn) {
-	defer conn.Close()
-
 	isFirstConn := true
 
 	buff := make([]byte, tcpMsgBuff)
@@ -62,6 +60,11 @@ func handleServe(conn net.Conn) {
 		Conn:   conn,
 		Device: &mainDevice,
 	}
+
+	defer func() {
+		AbortTCPDeviceConn(connection)
+		conn.Close()
+	}()
 
 	for {
 		_, err := conn.Read(buff)
