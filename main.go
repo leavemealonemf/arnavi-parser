@@ -14,6 +14,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -72,7 +73,8 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		fmt.Println("Received msg:", hexPackageData)
+		n := runtime.Stack(buff, true)
+		fmt.Println("Received msg:", buff[:n])
 
 		if isFirstConn {
 			// check data is header
@@ -375,6 +377,7 @@ func handleServe(conn net.Conn) {
 			// }
 
 			fmt.Println("total packet's in package:", len(totalPackets))
+			fmt.Println("Device IMEI:", mainDevice.IMEI)
 			fmt.Println("print json info about single packet:")
 			for i := 0; i < len(totalPackets); i++ {
 				if totalPackets[i] != nil {
@@ -694,6 +697,26 @@ func publishPacket(pkt []byte) {
 	}
 }
 
+func showConnectedDevices() {
+	for {
+		fmt.Println("-----------------------------------------")
+		connCount := len(connections)
+		fmt.Println("Connected device count:", connCount)
+		if connCount == 0 {
+			fmt.Println("-----------------------------------------")
+			time.Sleep(time.Second * 30)
+			continue
+		}
+
+		fmt.Println("Connected IMEI's:")
+		for key, value := range connections {
+			fmt.Println("Key:", key, "IMEI device struct value:", value.Device.IMEI)
+		}
+		fmt.Println("-----------------------------------------")
+		time.Sleep(time.Second * 30)
+	}
+}
+
 func main() {
 	db = pg.ConnectPG()
 	defer db.Close()
@@ -757,6 +780,8 @@ func main() {
 		false,
 		nil,
 	)
+
+	go showConnectedDevices()
 
 	for {
 		conn, err := serve.Accept()
