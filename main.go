@@ -833,7 +833,7 @@ func main() {
 		nil,
 	)
 
-	go showConnectedDevices()
+	// go showConnectedDevices()
 
 	for {
 		conn, err := serve.Accept()
