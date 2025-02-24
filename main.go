@@ -14,7 +14,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -73,8 +72,7 @@ func handleServe(conn net.Conn) {
 		}
 
 		hexPackageData := BytesToHexString(buff)
-		n := runtime.Stack(buff, true)
-		fmt.Println("Received msg:", string(buff[:n]))
+		fmt.Println("Received msg:", hexPackageData)
 
 		if isFirstConn {
 			// check data is header
