@@ -116,6 +116,7 @@ func handleServe(conn net.Conn) {
 
 			err := db.QueryRow("SELECT \"deviceIMEI\" FROM \"Scooter\" WHERE \"deviceIMEI\" = $1", "arnavi3:"+stringImei).Scan(&rowImei)
 			if err != nil {
+				fmt.Println("query row err:", err.Error())
 				break
 			}
 
@@ -390,11 +391,11 @@ func handleServe(conn net.Conn) {
 				if totalPackets[i] != nil {
 					if (i + 1) == len(totalPackets) {
 						mainDevice = totalPackets[i]
-						return
+						break
 					}
 					if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
 						mainDevice = totalPackets[i]
-						return
+						break
 					}
 				}
 			}
