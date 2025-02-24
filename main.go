@@ -622,8 +622,20 @@ func initIOTCommands() {
 
 	commands["reset-devices"] = &Command{
 		Val:    "0107",
-		NameEn: "Reset devices",
-		NameRu: "Сбросить устройства",
+		NameEn: "Reset module",
+		NameRu: "Перезагрузить модуль",
+	}
+
+	commands["update-firmware"] = &Command{
+		Val:    "0105",
+		NameEn: "Update firmware",
+		NameRu: "Обновить прошивку",
+	}
+
+	commands["update-settings"] = &Command{
+		Val:    "0108",
+		NameEn: "Update settings",
+		NameRu: "Обновить настройки (Загрузка из веб-конфигуратора)",
 	}
 }
 
