@@ -401,21 +401,23 @@ func handleServe(conn net.Conn) {
 			// 	}
 			// }
 
-			// for i := 0; i < len(totalPackets); i++ {
-			// 	if totalPackets[i] != nil {
-			// 		if (i + 1) == len(totalPackets) {
-			// 			mainDevice = totalPackets[i]
-			// 			break
-			// 		}
-			// 		if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
-			// 			mainDevice = totalPackets[i]
-			// 			break
-			// 		}
-			// 	}
-			// }
-
 			if len(totalPackets) == 0 {
 				continue
+			}
+
+			for i := 0; i < len(totalPackets); i++ {
+				fmt.Printf("total len %d, current index + 1 (%d)\n", len(totalPackets), i+1)
+				if totalPackets[i] != nil {
+					if (i + 1) == len(totalPackets) {
+						fmt.Println("we got expression: ((i + 1) == len(totalPackets)). exit...")
+						mainDevice = totalPackets[i]
+						break
+					}
+					if totalPackets[i].Lat != 0 && totalPackets[i].Lon != 0 {
+						mainDevice = totalPackets[i]
+						break
+					}
+				}
 			}
 
 			imei := mainDevice.IMEI
