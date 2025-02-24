@@ -489,12 +489,13 @@ func AbortTCPDeviceConn(conn *Connection) {
 	opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
 	res := mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
 
-	var dvce Device
+	var dvce *Device
 	err := res.Decode(&dvce)
 	if err != nil {
 		fmt.Println("[abort tcp conn] failed to decode result mongo")
 		return
 	}
+	fmt.Println("online info after disconnect", dvce.Online)
 	j, err := json.Marshal(&dvce)
 	if err != nil {
 		fmt.Println("[abort tcp conn] failed to marshal result")
