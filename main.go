@@ -70,7 +70,6 @@ func handleServe(conn net.Conn) {
 		_, err := conn.Read(buff)
 		if err != nil {
 			fmt.Println("Received data err:", err.Error())
-			AbortTCPDeviceConn(connection)
 			break
 		}
 
