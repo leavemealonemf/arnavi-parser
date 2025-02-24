@@ -61,10 +61,7 @@ func handleServe(conn net.Conn) {
 		Device: mainDevice,
 	}
 
-	defer func() {
-		AbortTCPDeviceConn(connection)
-		conn.Close()
-	}()
+	defer AbortTCPDeviceConn(connection)
 
 	for {
 		_, err := conn.Read(buff)
@@ -477,6 +474,8 @@ func AbortTCPDeviceConn(conn *Connection) {
 
 		opts := options.FindOneAndUpdate().SetSort(bson.D{{Key: "_ts", Value: -1}})
 		mg.UpdOneScooter(ctx, scooterColl, filter, update, opts)
+
+		conn.Conn.Close()
 
 		delete(connections, conn.Device.IMEI)
 	}
